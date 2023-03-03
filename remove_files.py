@@ -3,34 +3,32 @@
 # Author: zxcvos
 
 import argparse
+from collections import defaultdict
 import os
 
 def remove_files_by_name(path, file_names):
-    file_names = set(file_names)
-    removed_files = set()
-    removed_file_paths = {}
+    removed_files = defaultdict(list)
     stack = [path]
-    for root, dirs, files in os.walk(stack.pop()):
-        for name in files:
-            if name in file_names:
-                removed_files.add(name)
-                if removed_file_paths.get(name):
-                    removed_file_paths[name].append(os.path.abspath(root))
-                else:
-                    removed_file_paths[name] = [os.path.abspath(root)]
-                os.remove(os.path.join(root, name))
-        for name in dirs:
-            stack.append(os.path.join(root, name))
+    while stack:
+        entry = stack.pop()
+        with os.scandir(entry) as it:
+            for item in it:
+                if item.is_file() and item.name in file_names:
+                    removed_files[item.name].append(os.path.abspath(item.path))
+                    os.remove(item.path)
+                elif item.is_dir():
+                    stack.append(item.path)
     if len(removed_files) == 0:
         for name in file_names:
             print(f'没有找到 {name} 文件')
     else:
-        not_found_files = file_names - removed_files
+        not_found_files = list(filter(lambda name: not removed_files.get(name), file_names))
         for name in removed_files:
-            for dirname in removed_file_paths[name]:
-                print(f'{name} 文件所在的路径: {dirname}')
-            print(f'已删除所有 {name} 文件')
-        print("==========")
+            print(f'{name} 文件所在的路径:')
+            for file_path in removed_files[name]:
+                print(file_path)
+        if not_found_files and removed_files:
+            print('==========')
         for name in not_found_files:
             print(f'没有找到 {name} 文件')
 
