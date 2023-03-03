@@ -49,18 +49,21 @@ def remove_files_by_suffix(path, file_suffixes):
                 elif item.is_dir():
                     stack.append(item.path)
     file_names = [value for values in remove_suffixes.values() for value in values]
-    print('正在使用删除指定后缀文件的方式删除文件，以下是相关文件名称：')
-    for i in range(len(file_names)):
-        print(f'{i + 1}.{file_names[i]}')
-    idxs = input('为了防止误删，请输入要删除的文件编号进行确认，使用英文逗号分割：').strip().replace(' ', '')
-    if re.match(r'^\d+(,\d+)*$', idxs):
-        remove_files = []
-        for i in list(map(lambda i: int(i), idxs.split(','))):
-            if i > 0 and i <= len(file_names):
-                remove_files.append(file_names[i - 1])
-        remove_files_by_name(path, remove_files)
+    if file_names:
+        print('正在使用删除指定后缀文件的方式删除文件，以下是相关文件名称：')
+        for i in range(len(file_names)):
+            print(f'{i + 1}.{file_names[i]}')
+        idxs = input('为了防止误删，请输入要删除的文件编号进行确认，使用英文逗号分割：').strip().replace(' ', '')
+        if re.match(r'^\d+(,\d+)*$', idxs):
+            remove_files = []
+            for i in list(map(lambda i: int(i), idxs.split(','))):
+                if i > 0 and i <= len(file_names):
+                    remove_files.append(file_names[i - 1])
+            remove_files_by_name(path, remove_files)
+        else:
+            print('请按提示输入！')
     else:
-        print('请按提示输入！')
+        print(f'没有找到 {" ".join(file_suffixes)} 相关后缀的文件')
 
 
 if __name__ == '__main__':
