@@ -19,13 +19,12 @@ def remove_files_by_name(path, file_names):
                 elif item.is_dir():
                     stack.append(item.path)
     not_found_files = list(filter(lambda name: not removed_files.get(name), file_names))
-    if removed_files:
-        for name in removed_files:
-            print(f'{name} 文件所在的路径:')
-            for file_path in removed_files[name]:
-                print(file_path)
-        if not_found_files:
-            print('==========')
+    for name in removed_files:
+        print(f'{name} 文件所在的路径:')
+        for file_path in removed_files[name]:
+            print(file_path)
+    if not_found_files and removed_files:
+        print('==========')
     for name in not_found_files:
         print(f'没有找到 {name} 文件')
 
