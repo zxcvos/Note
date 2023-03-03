@@ -13,7 +13,7 @@ def remove_files_by_name(path, file_names, file_suffixes=None):
     if file_suffixes:
         file_suffixes = map(lambda s: s if s.startswith('.') else f'.{s}', file_suffixes)
         file_names = [name + suffix for suffix in file_suffixes for name in file_names]
-    file_names = list(filter(lambda name: name != sys.argv[0], file_names))
+    file_names = list(filter(lambda name: name != sys.argv[0] and '*' in name, file_names))
     removed_files = defaultdict(list)
     stack = [path]
     while stack:
