@@ -13,7 +13,7 @@ def remove_files_by_name(path, file_names, file_suffixes=None):
     if file_suffixes:
         file_suffixes = map(lambda s: s if s.startswith('.') else f'.{s}', file_suffixes)
         file_names = [name + suffix for suffix in file_suffixes for name in file_names]
-    file_names = list(filter(lambda name: name != sys.argv[0] and '*' in name, file_names))
+    file_names = list(filter(lambda name: name != sys.argv[0], file_names))
     removed_files = defaultdict(list)
     stack = [path]
     while stack:
@@ -36,19 +36,19 @@ def remove_files_by_name(path, file_names, file_suffixes=None):
         print(f'没有找到 {name} 文件')
 
 
-def remove_files_by_type(path, file_suffixes):
-    remove_types = defaultdict(list)
+def remove_files_by_suffix(path, file_suffixes):
+    remove_suffixes = defaultdict(list)
     stack = [path]
     while stack:
         entry = stack.pop()
         with os.scandir(entry) as it:
             for item in it:
                 remove_type = list(filter(lambda t: item.name.endswith(t), file_suffixes))
-                if item.is_file() and remove_type and item.name not in remove_types[remove_type[0]]:
-                    remove_types[remove_type[0]].append(item.name)
+                if item.is_file() and remove_type and item.name not in remove_suffixes[remove_type[0]]:
+                    remove_suffixes[remove_type[0]].append(item.name)
                 elif item.is_dir():
                     stack.append(item.path)
-    file_names = [value for values in remove_types.values() for value in values]
+    file_names = [value for values in remove_suffixes.values() for value in values]
     print('正在使用删除指定后缀文件的方式删除文件，以下是相关文件名称：')
     for i in range(len(file_names)):
         print(f'{i + 1}.{file_names[i]}')
