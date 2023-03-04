@@ -11,14 +11,14 @@ from collections import defaultdict
 
 def remove_files_by_name(path, file_names, file_suffixes=None):
     if file_suffixes:
-        file_suffixes = map(lambda s: s if s.startswith('.') else f'.{s}', file_suffixes)
-        file_names = [name + suffix for suffix in file_suffixes for name in file_names]
+        file_names = [f'{name}{suffix}' if suffix.startswith('.') else f'{name}.{suffix}' for suffix in file_suffixes for name in file_names]
     file_names = list(filter(lambda name: os.path.abspath(name) != os.path.abspath(sys.argv[0]), file_names))
     remove_files, _ = find_files(path, file_names)
     not_found_files = list(filter(lambda name: not remove_files.get(name), file_names))
     for name in remove_files:
         print(f'{name} 文件所在的路径:')
         for file_path in remove_files[name]:
+            os.remove(file_path)
             print(file_path)
     if not_found_files and remove_files:
         print('==========')
