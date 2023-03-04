@@ -13,41 +13,21 @@ def remove_files_by_name(path, file_names, file_suffixes=None):
     if file_suffixes:
         file_suffixes = map(lambda s: s if s.startswith('.') else f'.{s}', file_suffixes)
         file_names = [name + suffix for suffix in file_suffixes for name in file_names]
-    file_names = list(filter(lambda name: name != sys.argv[0], file_names))
-    removed_files = defaultdict(list)
-    stack = [path]
-    while stack:
-        entry = stack.pop()
-        with os.scandir(entry) as it:
-            for item in it:
-                if item.is_file() and item.name in file_names:
-                    removed_files[item.name].append(os.path.abspath(item.path))
-                    os.remove(item.path)
-                elif item.is_dir():
-                    stack.append(item.path)
-    not_found_files = list(filter(lambda name: not removed_files.get(name), file_names))
-    for name in removed_files:
+    file_names = list(filter(lambda name: os.path.abspath(name) != os.path.abspath(sys.argv[0]), file_names))
+    remove_files, _ = find_files(path, file_names)
+    not_found_files = list(filter(lambda name: not remove_files.get(name), file_names))
+    for name in remove_files:
         print(f'{name} 文件所在的路径:')
-        for file_path in removed_files[name]:
+        for file_path in remove_files[name]:
             print(file_path)
-    if not_found_files and removed_files:
+    if not_found_files and remove_files:
         print('==========')
     for name in not_found_files:
         print(f'没有找到 {name} 文件')
 
 
 def remove_files_by_suffix(path, file_suffixes):
-    remove_suffixes = defaultdict(list)
-    stack = [path]
-    while stack:
-        entry = stack.pop()
-        with os.scandir(entry) as it:
-            for item in it:
-                remove_type = list(filter(lambda t: item.name.endswith(t), file_suffixes))
-                if item.is_file() and remove_type and item.name not in remove_suffixes[remove_type[0]]:
-                    remove_suffixes[remove_type[0]].append(item.name)
-                elif item.is_dir():
-                    stack.append(item.path)
+    _, remove_suffixes = find_files(path, file_suffixes=file_suffixes)
     file_names = [value for values in remove_suffixes.values() for value in values]
     if file_names:
         print('正在使用删除指定后缀文件的方式删除文件，以下是相关文件名称：')
@@ -64,6 +44,25 @@ def remove_files_by_suffix(path, file_suffixes):
             print('请按提示输入！')
     else:
         print(f'没有找到 {" ".join(file_suffixes)} 相关后缀的文件')
+
+
+def find_files(path, file_names=[], file_suffixes=[]):
+    file_paths = defaultdict(list)
+    file_suffix_names = defaultdict(list)
+    stack = [path]
+    while stack:
+        entry = stack.pop()
+        with os.scandir(entry) as it:
+            for item in it:
+                remove_suffix = list(filter(lambda t: item.name.endswith(t), file_suffixes))
+                if item.is_file():
+                    if item.name in file_names:
+                        file_paths[item.name].append(os.path.abspath(item.path))
+                    elif remove_suffix and item.name not in file_suffix_names[remove_suffix[0]]:
+                        file_suffix_names[remove_suffix[0]].append(item.name)
+                elif item.is_dir():
+                    stack.append(item.path)
+    return file_paths, file_suffix_names
 
 
 if __name__ == '__main__':
