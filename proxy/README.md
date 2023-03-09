@@ -1,7 +1,7 @@
 # 手动配置 xray 代理服务
 ## 目录
-* [Xray 管理](#Xray 管理)
-* [Nginx 管理](#Nginx 管理)
+* [Xray 管理](#Xray-管理)
+* [Nginx 管理](#Nginx-管理)
 * [定时任务管理](#定时任务管理)
 ## Xray 管理
 ### 安装/更新 Xray-core
