@@ -165,6 +165,8 @@ PrivateTmp=true
 [Install]
 WantedBy=multi-user.target
 EOF
+  chmod 644 /etc/systemd/system/nginx.service
+  systemctl daemon-reload
 }
 
 cd ${TMPFILE_DIR}
