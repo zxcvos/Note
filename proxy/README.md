@@ -56,6 +56,51 @@ bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release
   systemctl status xray
   ```
 ## Nginx 管理
+### 安装 Nginx
+1. 使用 `apt install nginx` 直接安装
+   ```sh
+   apt update -y
+   apt install -y nginx
+   ```
+2. 自定义编译安装
+   ```sh
+   bash -c "$(curl -L https://raw.githubusercontent.com/zxcvos/Note/main/proxy/nginx/nginx_compile.sh)"
+   ```
+### 更新 Nginx
+1. 使用 `apt upgrade nginx` 直接更新
+   ```sh
+   apt update -y
+   apt upgrade -y nginx
+   ```
+2. 自定义编译更新
+   1. 确保 nginx 备份目录的存在
+      ```sh
+      [ -d $HOME/nginx ] || mkdir -p $HOME/nginx
+      ```
+   2. 创建当前 nginx 配置的备份
+      ```sh
+      tar -czvf $HOME/nginx/nginx_$(date +'%F_%H-%M-%S').tar.gz /usr/local/nginx/conf
+      ```
+   3. 更新
+      1. 平滑更新
+         1. 编译安装
+            ```sh
+            bash -c "$(curl -L https://raw.githubusercontent.com/zxcvos/Note/main/proxy/nginx/nginx_compile.sh)"
+            /usr/local/nginx/sbin/nginx -s reload
+            ```
+      2. 非平滑更新(重装更新)
+         1. 卸载当前 nginx
+            ```sh
+            systemctl -q is-active nginx && systemctl stop nginx
+            systemctl -q is-enabled nginx && systemctl disable nginx
+            rm -rf /etc/systemd/system/nginx.service
+            systemctl daemon-reload
+            rm -rf /usr/local/nginx
+            ```
+         2. 编译安装
+            ```sh
+            bash -c "$(curl -L https://raw.githubusercontent.com/zxcvos/Note/main/proxy/nginx/nginx_compile.sh)"
+            ```
 ## 定时任务管理
 * 自动更新 geo 文件
   * 获取 geo 更新脚本
