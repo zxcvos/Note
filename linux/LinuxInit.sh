@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-apt-get install -y openssl dnsutils screen tmux nload wget curl lsof bsdmainutils
+apt-get install -y openssl dnsutils screen tmux nload wget curl lsof bsdmainutils cron
 
 # limits
 if [ -f /etc/security/limits.conf ]; then
