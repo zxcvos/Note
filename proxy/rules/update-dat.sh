@@ -18,5 +18,5 @@ rm -f geoip.dat geosite.dat
 mv geoip.dat.new geoip.dat
 mv geosite.dat.new geosite.dat
 
-systemctl -q is-active xray && systemctl restart xray || systemctl start xray
-systemctl -q is-active nginx && systemctl restart nginx || systemctl start nginx
+systemctl -q is-active xray && systemctl restart xray
+systemctl -q is-active nginx && systemctl restart nginx
