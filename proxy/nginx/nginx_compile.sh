@@ -137,8 +137,37 @@ function compile_nginx() {
   fi
   _info "正在安装Nginx。。。"
   make install
+  ln -sf /usr/local/nginx/sbin/nginx /usr/sbin/nginx
+}
+
+function set_systemd_service_file() {
+  cat > /etc/systemd/system/nginx.service <<EOF
+[Unit]
+Description=The NGINX HTTP and reverse proxy server
+After=syslog.target network-online.target remote-fs.target nss-lookup.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+PIDFile=/run/nginx.pid
+ExecStartPre=/bin/rm -rf /dev/shm/nginx
+ExecStartPre=/bin/mkdir /dev/shm/nginx
+ExecStartPre=/bin/chmod 711 /dev/shm/nginx
+ExecStartPre=/bin/mkdir /dev/shm/nginx/tcmalloc
+ExecStartPre=/bin/chmod 0777 /dev/shm/nginx/tcmalloc
+ExecStartPre=/usr/sbin/nginx -t
+ExecStart=/usr/sbin/nginx
+ExecReload=/usr/sbin/nginx -s reload
+ExecStop=/bin/kill -s QUIT \$MAINPID
+ExecStopPost=/bin/rm -rf /dev/shm/nginx
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
 }
 
 cd ${TMPFILE_DIR}
 install_dependence
 compile_nginx
+set_systemd_service_file
