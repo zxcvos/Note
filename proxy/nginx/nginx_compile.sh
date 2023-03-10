@@ -155,11 +155,13 @@ ExecStartPre=/bin/mkdir /dev/shm/nginx
 ExecStartPre=/bin/chmod 711 /dev/shm/nginx
 ExecStartPre=/bin/mkdir /dev/shm/nginx/tcmalloc
 ExecStartPre=/bin/chmod 0777 /dev/shm/nginx/tcmalloc
-ExecStartPre=/usr/sbin/nginx -t
-ExecStart=/usr/sbin/nginx
-ExecReload=/usr/sbin/nginx -s reload
-ExecStop=/bin/kill -s QUIT \$MAINPID
+ExecStartPre=/usr/sbin/nginx -t -q -g 'daemon on; master_process on;'
+ExecStart=/usr/sbin/nginx -g 'daemon on; master_process on;'
+ExecReload=/usr/sbin/nginx -g 'daemon on; master_process on;' -s reload
+ExecStop=-/sbin/start-stop-daemon --quiet --stop --retry QUIT/5 --pidfile /run/nginx.pid
 ExecStopPost=/bin/rm -rf /dev/shm/nginx
+TimeoutStopSec=5
+KillMode=mixed
 PrivateTmp=true
 
 [Install]
