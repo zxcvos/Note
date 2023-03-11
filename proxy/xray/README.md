@@ -1,8 +1,13 @@
 ## Xray 管理
 ### 安装/更新 Xray-core
-```sh
-bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
-```
+* 最新版本
+  ```sh
+  bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
+  ```
+* 测试版
+  ```sh
+  bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install --beta
+  ```
 ### 卸载 Xray-core
 ```sh
 bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ remove --purge
