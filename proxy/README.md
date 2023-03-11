@@ -71,10 +71,6 @@
    (crontab -l >/dev/null 2>&1 && (crontab -l | grep "\*/5 \* \* \* \* /usr/bin/chmod 0640 -R /etc/ssl/private" || crontab -l | { cat; echo "*/5 * * * * /usr/bin/chmod 0640 -R /etc/ssl/private"; }) || echo "*/5 * * * * /usr/bin/chmod 0640 -R /etc/ssl/private") | crontab -
    ```
 
-## 网站建设
-
-## 证书管理
-
 ## Xray 服务端
 
 ## Xray 客户端
@@ -82,6 +78,7 @@
 ## 参考
 
 [小小白白话文][xray-docs]
+
 [证书权限][ssl-permission]
 
 [xray-docs]: https://xtls.github.io/Xray-docs-next/document/level-0
