@@ -202,12 +202,31 @@
 
 ## Xray 客户端
 
+| 名称 | 值 |
+| :--- | :--- |
+| 地址 | IP 或服务端的域名 |
+| 端口 | 443 |
+| 用户ID | xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx |
+| 流控 | xtls-rprx-vision |
+| 传输层安全 | reality |
+| SNI | onepiece.fandom.com |
+| Fingerprint | chrome |
+| PublicKey | wC-8O2vI-7OmVq4TVNBA57V_g4tMDM7jRXkcBYGMYFw |
+| shortId | 6ba85179e30d4fc2 |
+| spiderX | / |
+
 ## 参考
 
 [小小白白话文][xray-docs]
 
 [证书权限][ssl-permission]
 
-[xray-docs]: https://xtls.github.io/Xray-docs-next/document/level-0
+[REALITY][REALITY]
+
+[VLESS-XTLS-uTLS-REALITY][chika0801-Xray-examples]
+
+[xray-docs]: https://xtls.github.io/Xray-docs-next/document/level-0 (小小白白话文)
 [ssh-key]: https://xtls.github.io/Xray-docs-next/document/level-0/ch04-security.html#_4-7-%E4%BD%BF%E7%94%A8-rsa-%E5%AF%86%E9%92%A5%E7%99%BB%E5%BD%95%E5%B9%B6%E7%A6%81%E7%94%A8%E5%AF%86%E7%A0%81%E7%99%BB%E5%BD%95
-[ssl-permission]: https://github.com/XTLS/Xray-core/issues/867
+[ssl-permission]: https://github.com/XTLS/Xray-core/issues/867 (证书权限)
+[REALITY]: https://github.com/XTLS/REALITY (THE NEXT FUTURE)
+[chika0801-Xray-examples]: https://github.com/chika0801/Xray-examples (chika0801 Xray 配置文件模板)
