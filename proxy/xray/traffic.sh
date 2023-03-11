@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-_APISERVER=127.0.0.1:16921
+_APISERVER=127.0.0.1:32768
 _XRAY=/usr/local/bin/xray
 
 apidata () {
