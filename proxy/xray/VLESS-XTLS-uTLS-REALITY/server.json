@@ -110,7 +110,11 @@
           "xver": 0,
           "serverNames": [
             "fandom.com",
-            "www.fandom.com"
+            "www.fandom.com",
+            "toarumajutsunoindex.fandom.com",
+            "onepiece.fandom.com",
+            "naruto.fandom.com",
+            "bleach.fandom.com"
           ],
           "privateKey": "xray x25519 Private key",
           "shortIds": [
