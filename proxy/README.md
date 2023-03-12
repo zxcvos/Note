@@ -101,7 +101,7 @@
 
 * bbr
 
-  * 内核升级值最新稳定版
+  * 内核升级到最新稳定版
 
     ```sh
     sudo bash <(wget -qO- https://raw.githubusercontent.com/zxcvos/system-automation-scripts/main/update-kernel.sh)
