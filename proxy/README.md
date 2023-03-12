@@ -190,7 +190,7 @@
   * 添加定时任务
 
     ```sh
-    (crontab -l >/dev/null 2>&1 && (crontab -l | grep "30 6 \* \* \* ${HOME}/update_dat.sh >/dev/null 2>&1" || crontab -l | { cat; echo "30 6 * * * ${HOME}/update_dat.sh >/dev/null 2>&1"; }) || echo "30 6 * * * ${HOME}/update_dat.sh >/dev/null 2>&1") | crontab -
+    (crontab -l >/dev/null 2>&1 && (crontab -l | grep "30 22 \* \* \* ${HOME}/update_dat.sh >/dev/null 2>&1" || crontab -l | { cat; echo "30 22 * * * ${HOME}/update_dat.sh >/dev/null 2>&1"; }) || echo "30 22 * * * ${HOME}/update_dat.sh >/dev/null 2>&1") | crontab -
     ```
 
 * 完成
