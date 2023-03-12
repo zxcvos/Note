@@ -223,7 +223,7 @@
 
 [REALITY][REALITY]
 
-[VLESS-XTLS-uTLS-REALITY][chika0801-Xray-examples]
+[chika0801 Xray 配置文件模板][chika0801-Xray-examples]
 
 [xray-docs]: https://xtls.github.io/Xray-docs-next/document/level-0 (小小白白话文)
 [ssh-key]: https://xtls.github.io/Xray-docs-next/document/level-0/ch04-security.html#_4-7-%E4%BD%BF%E7%94%A8-rsa-%E5%AF%86%E9%92%A5%E7%99%BB%E5%BD%95%E5%B9%B6%E7%A6%81%E7%94%A8%E5%AF%86%E7%A0%81%E7%99%BB%E5%BD%95
