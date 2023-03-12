@@ -101,7 +101,7 @@
 
 * bbr
 
-  * 内核升级到最新稳定版
+  * 内核升级值最新稳定版
 
     ```sh
     sudo bash <(wget -qO- https://raw.githubusercontent.com/zxcvos/system-automation-scripts/main/update-kernel.sh)
@@ -126,23 +126,27 @@
     * VLESS-XTLS-uTLS-REALITY
 
       ```sh
-      wget -O config.json https://raw.githubusercontent.com/zxcvos/Note/main/proxy/xray/VLESS-XTLS-uTLS-REALITY/server.json
+      wget -O ${HOME}/config.json https://raw.githubusercontent.com/zxcvos/Note/main/proxy/xray/VLESS-XTLS-uTLS-REALITY/server.json
       ```
 
     * VLESS-H2-uTLS-REALITY
 
       ```sh
-      wget -O config.json https://raw.githubusercontent.com/zxcvos/Note/main/proxy/xray/VLESS-H2-uTLS-REALITY/server.json
+      wget -O ${HOME}/config.json https://raw.githubusercontent.com/zxcvos/Note/main/proxy/xray/VLESS-H2-uTLS-REALITY/server.json
       ```
 
   * 设置 UUID
 
     ```sh
-    sed -i "s|xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx|$(cat /proc/sys/kernel/random/uuid)|" config.json
+    sed -i "s|xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx|$(cat /proc/sys/kernel/random/uuid)|" ${HOME}/config.json
     ```
 
   * 获取 x25519 公私钥，并设置服务端 privateKey
     * 使用 `xray x25519` 获取 `Private key` 和 `Public key`
+
+      ```sh
+      xray x25519 > ${HOME}/xray_x25519
+      ```
 
       ```sh
       Private key: yIB7ENDuBk65JK9jgeOFRc8MbLFqBmqTlW_iuLsFbXs
@@ -152,19 +156,19 @@
     * 设置 privateKey
 
       ```sh
-      sed -i "s/xray x25519 Private key/yIB7ENDuBk65JK9jgeOFRc8MbLFqBmqTlW_iuLsFbXs/" config.json
+      sed -i "s|xray x25519 Private key|$(awk '/^Private/ {print $3}' ${HOME}/xray_x25519)|" ${HOME}/config.json
       ```
 
   * 设置 shortIds
 
     ```sh
-    sed -i "s|\"22\"|\"$(head -c 20 /dev/urandom | md5sum | head -c 2)\"|; s|\"4444\"|\"$(head -c 20 /dev/urandom | md5sum | head -c 4)\"|; s|\"88888888\"|\"$(head -c 20 /dev/urandom | md5sum | head -c 8)\"|; s|\"1616161616161616\"|\"$(head -c 20 /dev/urandom | md5sum | head -c 16)\"|" config.json
+    sed -i "s|\"22\"|\"$(head -c 20 /dev/urandom | md5sum | head -c 2)\"|; s|\"4444\"|\"$(head -c 20 /dev/urandom | md5sum | head -c 4)\"|; s|\"88888888\"|\"$(head -c 20 /dev/urandom | md5sum | head -c 8)\"|; s|\"1616161616161616\"|\"$(head -c 20 /dev/urandom | md5sum | head -c 16)\"|" ${HOME}/config.json
     ```
 
   * 覆盖 config.json 文件
 
     ```sh
-    mv -f config.json /usr/local/etc/xray/config.json
+    mv -f ${HOME}/config.json /usr/local/etc/xray/config.json
     ```
 
   * 查看配置
@@ -179,6 +183,12 @@
 
       ```sh
       jq '.inbounds[] | select(.settings != null) | select(.protocol == "vless") | {id: .settings.clients[].id, dest: .streamSettings.realitySettings.dest, serverNames: .streamSettings.realitySettings.serverNames, shortIds :.streamSettings.realitySettings.shortIds}' /usr/local/etc/xray/config.json
+      ```
+
+    * 查看 Public key
+
+      ```sh
+      awk '/^Public/ {print $3}' ${HOME}/xray_x25519
       ```
 
 * 定时更新 geo 文件
