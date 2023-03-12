@@ -119,18 +119,26 @@
   bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install --beta
   ```
 
-* 设置配置文件(VLESS-XTLS-uTLS-REALITY)
+* 设置配置文件
 
   * 获取配置文件
 
-    ```sh
-    wget -O VLESS-XTLS-uTLS-REALITY.json https://raw.githubusercontent.com/zxcvos/Note/main/proxy/xray/VLESS-XTLS-uTLS-REALITY/server.json
-    ```
+    * VLESS-XTLS-uTLS-REALITY
+
+      ```sh
+      wget -O config.json https://raw.githubusercontent.com/zxcvos/Note/main/proxy/xray/VLESS-XTLS-uTLS-REALITY/server.json
+      ```
+
+    * VLESS-H2-uTLS-REALITY
+
+      ```sh
+      wget -O config.json https://raw.githubusercontent.com/zxcvos/Note/main/proxy/xray/VLESS-H2-uTLS-REALITY/server.json
+      ```
 
   * 设置 UUID
 
     ```sh
-    sed -i "s|xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx|$(cat /proc/sys/kernel/random/uuid)|" VLESS-XTLS-uTLS-REALITY.json
+    sed -i "s|xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx|$(cat /proc/sys/kernel/random/uuid)|" config.json
     ```
 
   * 获取 x25519 公私钥，并设置服务端 privateKey
@@ -144,19 +152,19 @@
     * 设置 privateKey
 
       ```sh
-      sed -i "s/xray x25519 Private key/yIB7ENDuBk65JK9jgeOFRc8MbLFqBmqTlW_iuLsFbXs/" VLESS-XTLS-uTLS-REALITY.json
+      sed -i "s/xray x25519 Private key/yIB7ENDuBk65JK9jgeOFRc8MbLFqBmqTlW_iuLsFbXs/" config.json
       ```
 
   * 设置 shortIds
 
     ```sh
-    sed -i "s|\"22\"|\"$(head -c 20 /dev/urandom | md5sum | head -c 2)\"|; s|\"4444\"|\"$(head -c 20 /dev/urandom | md5sum | head -c 4)\"|; s|\"88888888\"|\"$(head -c 20 /dev/urandom | md5sum | head -c 8)\"|; s|\"1616161616161616\"|\"$(head -c 20 /dev/urandom | md5sum | head -c 16)\"|" VLESS-XTLS-uTLS-REALITY.json
+    sed -i "s|\"22\"|\"$(head -c 20 /dev/urandom | md5sum | head -c 2)\"|; s|\"4444\"|\"$(head -c 20 /dev/urandom | md5sum | head -c 4)\"|; s|\"88888888\"|\"$(head -c 20 /dev/urandom | md5sum | head -c 8)\"|; s|\"1616161616161616\"|\"$(head -c 20 /dev/urandom | md5sum | head -c 16)\"|" config.json
     ```
 
   * 覆盖 config.json 文件
 
     ```sh
-    mv -f VLESS-XTLS-uTLS-REALITY.json /usr/local/etc/xray/config.json
+    mv -f config.json /usr/local/etc/xray/config.json
     ```
 
   * 查看配置
@@ -170,7 +178,7 @@
     * 使用 jq 查看 uuid, dest, serverNames, shortIds
 
       ```sh
-      jq '.inbounds[] | select(.settings != null) | select(.port == 443) | {id: .settings.clients[].id, dest: .streamSettings.realitySettings.dest, serverNames: .streamSettings.realitySettings.serverNames, shortIds :.streamSettings.realitySettings.shortIds}' /usr/local/etc/xray/config.json
+      jq '.inbounds[] | select(.settings != null) | select(.protocol == "vless") | {id: .settings.clients[].id, dest: .streamSettings.realitySettings.dest, serverNames: .streamSettings.realitySettings.serverNames, shortIds :.streamSettings.realitySettings.shortIds}' /usr/local/etc/xray/config.json
       ```
 
 * 定时更新 geo 文件
