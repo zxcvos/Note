@@ -12,13 +12,13 @@
 
     ```sh
     wget -qO- bench.sh | bash
-  ```
+    ```
 
   * 性能测试(unixbench.sh)
 
     ```sh
     wget --no-check-certificate -qO- https://github.com/teddysun/across/raw/master/unixbench.sh | bash
-  ```
+    ```
 
 * YABS - 使用 fio、iperf3 和 Geekbench 评估 Linux 服务器的性能
 
