@@ -3,7 +3,7 @@
 * 测速(speedtest.sh)
 
   ```sh
-  wget -qO- [https://](https://raw.githubusercontent.com/zxcvos/Note/main/proxy/tools/speedtest.sh) | bash
+  wget -qO- https://raw.githubusercontent.com/zxcvos/Note/main/proxy/tools/speedtest.sh | bash
   ```
 
 * 秋水逸冰
