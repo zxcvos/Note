@@ -191,6 +191,14 @@
       awk '/^Public/ {print $3}' ${HOME}/xray_x25519
       ```
 
+  * 自定义目标网站
+
+    * 检查是否支持 TLSv1.3 与 H2
+
+      ```sh
+      bash <(wget -qO- https://raw.githubusercontent.com/zxcvos/Note/main/proxy/tools/check_tls13_h2_support.sh)
+      ```
+
 * 定时更新 geo 文件
 
   * 获取 geo 更新脚本
