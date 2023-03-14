@@ -41,3 +41,22 @@
     ```sh
     wget -qO- yabs.sh | bash
     ```
+
+* sjlleo
+
+  * NetFlix 解锁检测
+
+    * amd64
+      ```sh
+      wget -O nf https://github.com/sjlleo/netflix-verify/releases/download/v3.1.0-1/nf_linux_amd64 && chmod +x nf && ./nf
+      ```
+
+    * arm64
+      ```sh
+      wget -O nf https://github.com/sjlleo/netflix-verify/releases/download/v3.1.0-1/nf_linux_arm64 && chmod +x nf && ./nf
+      ```
+
+    * mips
+      ```sh
+      wget -O nf https://github.com/sjlleo/netflix-verify/releases/download/v3.1.0-1/nf_linux_mips && chmod +x nf && ./nf
+      ```
