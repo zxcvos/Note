@@ -196,7 +196,7 @@
     * 检查是否支持 TLSv1.3 与 H2
 
       ```sh
-      bash <(wget -qO- https://raw.githubusercontent.com/zxcvos/Note/main/proxy/tools/check_tls13_h2_support.sh)
+      bash <(wget -qO- https://raw.githubusercontent.com/zxcvos/Note/main/proxy/tools/check_tls13_h2_support.sh) www.google.com
       ```
 
 * 定时更新 geo 文件
