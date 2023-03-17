@@ -97,6 +97,13 @@
   crontab -l | { cat; echo "*/5 * * * * /usr/bin/chmod 0640 -R /etc/ssl/private"; } | uniq | crontab -
   ```
 
+* 删除定时任务
+
+  ```sh
+  crontab -l | grep -v "/usr/bin/chown root:ssl-cert -R /etc/ssl/private" | crontab -
+  crontab -l | grep -v "/usr/bin/chmod 0640 -R /etc/ssl/private" | crontab -
+  ```
+
 ## Xray 服务端
 
 * bbr
@@ -217,6 +224,12 @@
 
     ```sh
     crontab -l | { cat; echo "30 22 * * * ${HOME}/update_dat.sh >/dev/null 2>&1"; } | uniq | crontab -
+    ```
+
+  * 删除定时任务
+
+    ```sh
+    crontab -l | grep -v "${HOME}/update_dat.sh >/dev/null 2>&1" | crontab -
     ```
 
 * 完成
