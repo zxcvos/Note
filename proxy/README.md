@@ -88,13 +88,13 @@
 * 定时重置 `/etc/ssl/private` 目录用户组
 
   ```sh
-  (crontab -l >/dev/null 2>&1 && (crontab -l | grep "\*/5 \* \* \* \* /usr/bin/chown root:ssl-cert -R /etc/ssl/private" || crontab -l | { cat; echo "*/5 * * * * /usr/bin/chown root:ssl-cert -R /etc/ssl/private"; }) || echo "*/5 * * * * /usr/bin/chown root:ssl-cert -R /etc/ssl/private") | crontab -
+  crontab -l | { cat; echo "*/5 * * * * /usr/bin/chown root:ssl-cert -R /etc/ssl/private"; } | uniq | crontab -
   ```
 
 * 定时重置 `/etc/ssl/private` 权限
 
   ```sh
-  (crontab -l >/dev/null 2>&1 && (crontab -l | grep "\*/5 \* \* \* \* /usr/bin/chmod 0640 -R /etc/ssl/private" || crontab -l | { cat; echo "*/5 * * * * /usr/bin/chmod 0640 -R /etc/ssl/private"; }) || echo "*/5 * * * * /usr/bin/chmod 0640 -R /etc/ssl/private") | crontab -
+  crontab -l | { cat; echo "*/5 * * * * /usr/bin/chmod 0640 -R /etc/ssl/private"; } | uniq | crontab -
   ```
 
 ## Xray 服务端
@@ -216,7 +216,7 @@
   * 添加定时任务
 
     ```sh
-    crontab -l | { cat; echo "30 22 * * * ${HOME}/update_dat.sh >/dev/null 2>&1"; } | { uniq; } | crontab -
+    crontab -l | { cat; echo "30 22 * * * ${HOME}/update_dat.sh >/dev/null 2>&1"; } | uniq | crontab -
     ```
 
 * 完成
