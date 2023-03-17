@@ -19,4 +19,3 @@ mv geoip.dat.new geoip.dat
 mv geosite.dat.new geosite.dat
 
 systemctl -q is-active xray && systemctl restart xray
-systemctl -q is-active nginx && systemctl restart nginx
