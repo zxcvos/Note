@@ -11,5 +11,5 @@ CHECK_NUM=$(echo QUIT | stdbuf -oL openssl s_client -connect "${check_url}:443" 
 if [[ ${CHECK_NUM} -eq 3 ]]; then
   echo "https://${CHECK_URL} supports TLS 1.3 and h2"
 else
-  echo "https://${CHECK_URL} does not support TLS 1.3 or h2"
+  echo "https://${CHECK_URL} does not support TLS 1.3 or h2 or x25519"
 fi
