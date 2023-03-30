@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: always
+    ports:
+      - 22333:80
+      - 23330:3012
+    networks:
+      - share_net
+    volumes:
+      - ./vw-data:/data
+    environment:
+      - WEBSOCKET_ENABLED=true
+      - ICON_SERVICE=bitwarden
+      - DISABLE_ICON_DOWNLOAD=true
+      - ADMIN_TOKEN="openssl rand -base64 48"
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: vaultwarden watchtower --cleanup --schedule "0 30 22 * * *"
+    networks:
+      - share_net
+networks:
+  share_net:
+    driver: bridge
