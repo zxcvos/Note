@@ -1,0 +1,34 @@
+version: '3.8'
+services:
+  reader:
+    image: hectorqin/reader
+    #image: hectorqin/reader:openj9-latest #docker镜像，arm64架构或小内存机器优先使用此镜像.启用需删除上一行
+    container_name: reader
+    restart: always
+    ports:
+      - 23331:8080
+    networks:
+      - share_net
+    volumes:
+      - ${HOME}/logs:/logs
+      - ${HOME}/storage:/storage
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - READER_APP_USERLIMIT=50
+      - READER_APP_USERBOOKLIMIT=1000
+      - READER_APP_CACHECHAPTERCONTENT=true
+      - READER_APP_SECURE=true
+      - READER_APP_SECUREKEY=adminpwd
+      - READER_APP_INVITECODE=registercode
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: reader watchtower --cleanup --schedule "0 30 22 * * *"
+    networks:
+      - share_net
+networks:
+  share_net:
+    driver: bridge
