@@ -216,16 +216,16 @@ if [[ ${is_issue} -eq 1 ]]; then
     issue_cert
 fi
 
+if [[ ${is_check_cron} -eq 1 ]]; then
+    check_cron
+fi
+
 if [[ ${is_renew} -eq 1 ]]; then
     renew_cert
 fi
 
 if [[ ${is_stop_renew} -eq 1 ]]; then
     stop_renew_cert
-fi
-
-if [[ ${is_check_cron} -eq 1 ]]; then
-    check_cron
 fi
 
 if [[ ${is_show_info} -eq 1 ]]; then
