@@ -91,6 +91,15 @@ function _os_ver() {
   printf -- "%s" "${main_ver%%.*}"
 }
 
+function _error_detect() {
+  local cmd="$1"
+  _info "${cmd}"
+  eval ${cmd}
+  if [ $? -ne 0 ]; then
+    _error "Execution command (${cmd}) failed, please check it and try again."
+  fi
+}
+
 function _exists() {
   local cmd="$1"
   if eval type type >/dev/null 2>&1; then
