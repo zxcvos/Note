@@ -91,6 +91,19 @@ function _os_ver() {
   printf -- "%s" "${main_ver%%.*}"
 }
 
+function _exists() {
+  local cmd="$1"
+  if eval type type >/dev/null 2>&1; then
+    eval type "$cmd" >/dev/null 2>&1
+  elif command >/dev/null 2>&1; then
+    command -v "$cmd" >/dev/null 2>&1
+  else
+    which "$cmd" >/dev/null 2>&1
+  fi
+  local rt=$?
+  return ${rt}
+}
+
 function _install_update() {
   local package_name="$@"
   case "$(_os)" in
