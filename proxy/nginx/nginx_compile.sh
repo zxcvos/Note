@@ -381,8 +381,10 @@ function nginx_config() {
 check_os
 
 if [[ ${is_install} -eq 1 ]]; then
+  acme_dependencies
   pkg_install
 elif [[ ${is_compile} -eq 1 ]]; then
+  acme_dependencies
   source_compile
 elif [[ ${is_update} -eq 1 ]]; then
   if [[ -d /etc/nginx ]]; then
@@ -390,7 +392,7 @@ elif [[ ${is_update} -eq 1 ]]; then
   elif [[ -d /usr/local/nginx/conf ]]; then
     cp -af /usr/local/nginx/conf ${TMPFILE_DIR}
     source_compile
-    cp -af ${TMPFILE_DIR}/conf /usr/local/nginx 
+    cp -af ${TMPFILE_DIR}/conf /usr/local/nginx
   fi
 elif [[ ${is_purge} -eq 1 ]]; then
   purge_nginx
