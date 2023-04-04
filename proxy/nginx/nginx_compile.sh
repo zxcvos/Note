@@ -18,6 +18,7 @@ declare TMPFILE_DIR=$(mktemp -d -p ${CUR_DIR} -t nginx_compile.XXXXXXX) || exit 
 
 declare is_install=0
 declare is_compile=0
+declare is_update=0
 declare is_purge=0
 declare is_with_log=0
 
@@ -54,6 +55,10 @@ while [[ $# -ge 1 ]]; do
   -c | --compile)
     shift
     is_compile=1
+    ;;
+  -u | --update)
+    shift
+    is_update=1
     ;;
   -p | --purge)
     shift
@@ -379,11 +384,19 @@ if [[ ${is_install} -eq 1 ]]; then
   pkg_install
 elif [[ ${is_compile} -eq 1 ]]; then
   source_compile
+elif [[ ${is_update} -eq 1 ]]; then
+  if [[ -d /etc/nginx ]]; then
+    pkg_install
+  elif [[ -d /usr/local/nginx/conf ]]; then
+    cp -af /usr/local/nginx/conf ${TMPFILE_DIR}
+    source_compile
+    cp -af ${TMPFILE_DIR}/conf /usr/local/nginx 
+  fi
 elif [[ ${is_purge} -eq 1 ]]; then
   purge_nginx
 fi
 
-if [[ ${is_purge} -ne 1 ]]; then
+if [[ ${is_update} -ne 1 && ${is_purge} -ne 1 ]]; then
   [[ ${is_install} -eq 1 || ${is_compile} -eq 1 ]] && systemctl_config
   nginx_config
 fi
