@@ -4,12 +4,12 @@ apt-get install -y iproute2 procps tzdata openssl dnsutils screen tmux nload wge
 
 # limits
 if [ -f /etc/security/limits.conf ]; then
-  LIMIT='262144'
+  LIMIT='1048576'
   sed -i '/^\(\*\|root\)[[:space:]]*\(hard\|soft\)[[:space:]]*\(nofile\|memlock\)/d' /etc/security/limits.conf
   echo -ne "*\thard\tmemlock\t${LIMIT}\n*\tsoft\tmemlock\t${LIMIT}\nroot\thard\tmemlock\t${LIMIT}\nroot\tsoft\tmemlock\t${LIMIT}\n*\thard\tnofile\t${LIMIT}\n*\tsoft\tnofile\t${LIMIT}\nroot\thard\tnofile\t${LIMIT}\nroot\tsoft\tnofile\t${LIMIT}\n\n" >>/etc/security/limits.conf
 fi
 if [ -f /etc/systemd/system.conf ]; then
-  sed -i 's/#\?DefaultLimitNOFILE=.*/DefaultLimitNOFILE=262144/' /etc/systemd/system.conf
+  sed -i 's/#\?DefaultLimitNOFILE=.*/DefaultLimitNOFILE=1048576/' /etc/systemd/system.conf
 fi
 
 # systemd-journald
@@ -30,15 +30,15 @@ fs.nr_open = 1048576
 vm.overcommit_memory = 1
 vm.swappiness = 10
 net.core.somaxconn = 65535
-net.core.optmem_max = 1048576
-net.core.rmem_max = 8388608
-net.core.wmem_max = 8388608
-net.core.rmem_default = 1048576
-net.core.wmem_default = 1048576
-net.core.netdev_max_backlog = 262144
-net.ipv4.tcp_mem = 2097152 8388608 16777216 
-net.ipv4.tcp_rmem = 16384 524288 16777216
-net.ipv4.tcp_wmem = 16384 524288 16777216
+net.core.optmem_max = 33554432
+net.core.rmem_max = 33554432
+net.core.wmem_max = 33554432
+net.core.rmem_default = 524288
+net.core.wmem_default = 524288
+net.core.netdev_max_backlog = 65536
+net.ipv4.tcp_mem = 2097152 8388608 33554432 
+net.ipv4.tcp_rmem = 16384 524288 33554432
+net.ipv4.tcp_wmem = 16384 524288 33554432
 net.ipv4.tcp_syncookies = 1
 net.ipv4.tcp_syn_retries = 3
 net.ipv4.tcp_synack_retries = 2
