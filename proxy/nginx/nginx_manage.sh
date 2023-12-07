@@ -238,6 +238,7 @@ function acme_dependencies() {
   esac
 }
 
+# cflags
 function gen_cflags() {
   cflags=('-g0' '-O3')
   if gcc -v --help 2>&1 | grep -qw "\\-fstack\\-reuse"; then
@@ -290,30 +291,28 @@ function gen_cflags() {
   fi
 }
 
+# install by pkg
 function pkg_install() {
-  _info "配置安装链接"
+  _info "Installing dependencies"
   install_dependencies
-  _info "开始安装 nginx"
-  _install_update "nginx"
+  _info "Installing Nginx"
+  _install "nginx"
 }
 
+# source compile
 function source_compile() {
   cd ${TMPFILE_DIR}
-  _info "安装编译所需工具链与依赖"
+  _info "Installing toolchains and dependencies"
   compile_dependencies
-  _info "获取 nginx 与 openssl 最新版本号"
-  nginx_version="$(wget -qO- --no-check-certificate https://api.github.com/repos/nginx/nginx/tags | grep 'name' | cut -d\" -f4 | grep 'release' | head -1 | sed 's/release/nginx/')"
-  openssl_version="openssl-$(wget -qO- --no-check-certificate https://api.github.com/repos/openssl/openssl/tags | grep 'name' | cut -d\" -f4 | grep -Eoi '^openssl-([0-9]\.?){3}$' | head -1)"
+  _info "Retrieve the latest versions of Nginx and OpenSSL"
+  local nginx_version="$(wget -qO- --no-check-certificate https://api.github.com/repos/nginx/nginx/tags | grep 'name' | cut -d\" -f4 | grep 'release' | head -1 | sed 's/release/nginx/')"
+  local openssl_version="openssl-$(wget -qO- --no-check-certificate https://api.github.com/repos/openssl/openssl/tags | grep 'name' | cut -d\" -f4 | grep -Eoi '^openssl-([0-9]\.?){3}$' | head -1)"
   gen_cflags
-  _info "开始获取 nginx"
-  if ! wget -O ${nginx_version}.tar.gz https://nginx.org/download/${nginx_version}.tar.gz; then
-    _error "获取 nginx 失败"
-  fi
+  _info "Download the latest versions of Nginx"
+  _error_detect "wget -O ${nginx_version}.tar.gz https://nginx.org/download/${nginx_version}.tar.gz"
   tar -zxf ${nginx_version}.tar.gz
-  _info "开始获取 openssl"
-  if ! wget -O ${openssl_version}.tar.gz https://github.com/openssl/openssl/archive/${openssl_version#*-}.tar.gz; then
-    _error "获取 openssl 失败"
-  fi
+  _info "Download the latest versions of OpenSSL"
+  _error_detect "wget -O ${openssl_version}.tar.gz https://github.com/openssl/openssl/archive/${openssl_version#*-}.tar.gz"
   tar -zxf ${openssl_version}.tar.gz
   cd ${nginx_version}
   sed -i "s/OPTIMIZE[ \\t]*=>[ \\t]*'-O'/OPTIMIZE          => '-O3'/g" src/http/modules/perl/Makefile.PL
@@ -321,15 +320,47 @@ function source_compile() {
   sed -i 's/NGX_PM_CFLAGS=`$NGX_PERL -MExtUtils::Embed -e ccopts`/NGX_PM_CFLAGS="`$NGX_PERL -MExtUtils::Embed -e ccopts` $CFLAGS"/g' auto/lib/perl/conf
   ./configure --prefix="/usr/local/nginx" --user=root --group=root --with-threads --with-file-aio --with-http_ssl_module --with-http_v2_module --with-http_realip_module --with-http_addition_module --with-http_xslt_module=dynamic --with-http_image_filter_module=dynamic --with-http_geoip_module=dynamic --with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_mp4_module --with-http_gunzip_module --with-http_gzip_static_module --with-http_auth_request_module --with-http_random_index_module --with-http_secure_link_module --with-http_degradation_module --with-http_slice_module --with-http_stub_status_module --with-http_perl_module=dynamic --with-mail=dynamic --with-mail_ssl_module --with-stream=dynamic --with-stream_ssl_module --with-stream_realip_module --with-stream_geoip_module=dynamic --with-stream_ssl_preread_module --with-google_perftools_module --with-compat --with-cc-opt="${cflags[*]}" --with-openssl="../${openssl_version}" --with-openssl-opt="${cflags[*]}"
   swap_on 512
-  _info " 开始编译 nginx"
-  if ! make -j$(nproc); then
-    _error "nginx 编译失败"
-  fi
-  _info "开始安装 nginx"
+  _info "Compiling Nginx"
+  _error_detect "make -j$(nproc)"
+}
+
+# install by source
+function source_install() {
+  source_compile
+  _info "Installing Nginx"
   make install
   ln -sf /usr/local/nginx/sbin/nginx /usr/sbin/nginx
 }
 
+# update by pkg
+function pkg_update() {
+  _info "Updating Nginx"
+  _update "nginx"
+}
+
+# update by source
+function source_update() {
+  local latest_nginx_version="$(wget -qO- --no-check-certificate https://api.github.com/repos/nginx/nginx/tags | grep 'name' | cut -d\" -f4 | grep 'release' | head -1 | sed 's/release/nginx/')"
+  local latest_openssl_version="$(wget -qO- --no-check-certificate https://api.github.com/repos/openssl/openssl/tags | grep 'name' | cut -d\" -f4 | grep -Eoi '^openssl-([0-9]\.?){3}$' | head -1)"
+  local current_version_nginx="$(nginx -V 2>&1 | grep "^nginx version:.*" | cut -d / -f 2)"
+  local current_version_openssl="$(nginx -V 2>&1 | grep "^built with OpenSSL" | awk '{print $4}')"
+  if _version_ge ${latest_nginx_version#*-} ${current_version_nginx} || _version_ge ${latest_openssl_version#*-} ${current_version_openssl}; then
+    source_compile
+    _info "Updating Nginx"
+    rm -rf /usr/sbin/nginx
+    mv /usr/local/nginx/sbin/nginx /usr/local/nginx/sbin/nginx_$(date +%F)
+    cp objs/nginx /usr/local/nginx/sbin/
+    ln -sf /usr/local/nginx/sbin/nginx /usr/sbin/nginx
+    if systemctl is-active --quiet nginx; then
+      kill -USR2 $(cat /run/nginx.pid) && sleep 1
+      kill -WINCH $(cat /run/nginx.pid.oldbin) && sleep 1
+      kill -HUP $(cat /run/nginx.pid.oldbin) && sleep 1
+      kill -QUIT $(cat /run/nginx.pid.oldbin)
+    fi
+  fi
+}
+
+# purge
 function purge_nginx() {
   systemctl stop nginx
   systemctl disable nginx
