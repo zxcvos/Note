@@ -1,22 +1,28 @@
 #!/usr/bin/env bash
-
-# Author: zxcvos
-# Version: 0.1
-# Date: 2023-04-03
+#
+# Copyright (C) 2023 zxcvos
+#
+# documentation: https://nginx.org/en/linux_packages.html
+# update: https://zhuanlan.zhihu.com/p/193078620
+# gcc: https://github.com/kirin10000/Xray-script
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin:/snap/bin
 export PATH
 
 trap egress EXIT
 
-declare CUR_DIR="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
-declare RED='\033[1;31;31m'
-declare GREEN='\033[1;31;32m'
-declare YELLOW='\033[1;31;33m'
-declare NC='\033[0m'
-declare TMPFILE_DIR=$(mktemp -d -p ${CUR_DIR} -t nginx_compile.XXXXXXX) || exit 1
+# color
+readonly RED='\033[1;31;31m'
+readonly GREEN='\033[1;31;32m'
+readonly YELLOW='\033[1;31;33m'
+readonly NC='\033[0m'
 
-declare is_install=0
+# directory
+readonly CUR_DIR="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
+readonly TMPFILE_DIR="$(mktemp -d -p "${CUR_DIR}" -t nginxtemp.XXXXXXXX)" || exit 1
+
+# optional
+declare is_install=1
 declare is_compile=0
 declare is_update=0
 declare is_purge=0
