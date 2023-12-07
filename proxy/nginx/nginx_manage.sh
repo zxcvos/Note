@@ -190,19 +190,19 @@ function swap_on() {
   fi
 }
 
+# dependencies
 function install_dependencies() {
   case "$(_os)" in
   centos)
-    wget -O /etc/yum.repos.d/nginx.repo https://raw.githubusercontent.com/zxcvos/Xray-script/main/repo/nginx.repo
+    echo "W25naW54LXN0YWJsZV0KbmFtZT1uZ2lueCBzdGFibGUgcmVwbwpiYXNldXJsPWh0dHBzOi8vbmdpbngub3JnL3BhY2thZ2VzL2NlbnRvcy8kcmVsZWFzZXZlci8kYmFzZWFyY2gvCmdwZ2NoZWNrPTEKZW5hYmxlZD0xCmdwZ2tleT1odHRwczovL25naW54Lm9yZy9rZXlzL25naW54X3NpZ25pbmcua2V5Cm1vZHVsZV9ob3RmaXhlcz10cnVlCgpbbmdpbngtbWFpbmxpbmVdCm5hbWU9bmdpbnggbWFpbmxpbmUgcmVwbwpiYXNldXJsPWh0dHBzOi8vbmdpbngub3JnL3BhY2thZ2VzL21haW5saW5lL2NlbnRvcy8kcmVsZWFzZXZlci8kYmFzZWFyY2gvCmdwZ2NoZWNrPTEKZW5hYmxlZD0wCmdwZ2tleT1odHRwczovL25naW54Lm9yZy9rZXlzL25naW54X3NpZ25pbmcua2V5Cm1vZHVsZV9ob3RmaXhlcz10cnVl" | base64 -d >/etc/yum.repos.d/nginx.repo
     ;;
   debian | ubuntu)
-    [[ ${is_mainline} =~ ^[Yy]$ ]] && mainline="/mainline"
-    [ "debian" -eq "$(_os)" ] && _install_update "debian-archive-keyring" || _install_update "ubuntu-keyring"
+    [ "debian" -eq "$(_os)" ] && _install "debian-archive-keyring" || _install "ubuntu-keyring"
     rm -rf /etc/apt/sources.list.d/nginx.list
     curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor |
       sudo tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
     echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
-            http://nginx.org/packages${mainline}/$(_os) $(lsb_release -cs) nginx" |
+            http://nginx.org/packages/$(_os) $(lsb_release -cs) nginx" |
       sudo tee /etc/apt/sources.list.d/nginx.list
     echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" |
       sudo tee /etc/apt/preferences.d/99nginx
@@ -214,15 +214,15 @@ function compile_dependencies() {
   case "$(_os)" in
   centos)
     # toolchains
-    _install_update ca-certificates wget gcc gcc-c++ make perl-IPC-Cmd perl-Getopt-Long perl-Data-Dumper perl-FindBin
+    _install ca-certificates wget gcc gcc-c++ make perl-IPC-Cmd perl-Getopt-Long perl-Data-Dumper perl-FindBin
     # dependencies
-    _install_update pcre2-devel zlib-devel libxml2-devel libxslt-devel gd-devel geoip-devel perl-ExtUtils-Embed gperftools-devel perl-devel
+    _install pcre2-devel zlib-devel libxml2-devel libxslt-devel gd-devel geoip-devel perl-ExtUtils-Embed gperftools-devel perl-devel
     ;;
   debian | ubuntu)
     # toolchains
-    _install_update ca-certificates wget gcc g++ make perl-base perl
+    _install ca-certificates wget gcc g++ make perl-base perl
     # dependencies
-    _install_update libpcre2-dev zlib1g-dev libxml2-dev libxslt1-dev libgd-dev libgeoip-dev libgoogle-perftools-dev libperl-dev
+    _install libpcre2-dev zlib1g-dev libxml2-dev libxslt1-dev libgd-dev libgeoip-dev libgoogle-perftools-dev libperl-dev
     ;;
   esac
 }
@@ -230,10 +230,10 @@ function compile_dependencies() {
 function acme_dependencies() {
   case "$(_os)" in
   centos)
-    _install_update curl openssl crontabs
+    _install curl openssl crontabs
     ;;
   debian | ubuntu)
-    _install_update curl openssl cron
+    _install curl openssl cron
     ;;
   esac
 }
