@@ -28,28 +28,30 @@ declare is_update=0
 declare is_purge=0
 declare is_with_log=0
 
+# exit process
+function egress() {
+  [[ -e ${TMPFILE_DIR}/swap ]] && swapoff ${TMPFILE_DIR}/swap
+  rm -rf ${TMPFILE_DIR}
+}
+
+# status print
 function _info() {
   printf "${GREEN}[Info] ${NC}"
-  printf -- "%s" "$1"
+  printf -- "%s" "$@"
   printf "\n"
 }
 
 function _warn() {
   printf "${YELLOW}[Warning] ${NC}"
-  printf -- "%s" "$1"
+  printf -- "%s" "$@"
   printf "\n"
 }
 
 function _error() {
   printf "${RED}[Error] ${NC}"
-  printf -- "%s" "$1"
+  printf -- "%s" "$@"
   printf "\n"
   exit 1
-}
-
-function egress() {
-  [[ -e ${TMPFILE_DIR}/swap ]] && swapoff ${TMPFILE_DIR}/swap
-  rm -rf $TMPFILE_DIR
 }
 
 while [[ $# -ge 1 ]]; do
