@@ -1,49 +1,26 @@
 ## Nginx 管理
 ### 安装 Nginx
-1. 使用 `apt install nginx` 直接安装
+1. 获取 nginx 管理脚本
    ```sh
-   apt update -y
-   apt install -y nginx
+   curl -fsSL -o ${HOME}/nginx.sh https://raw.githubusercontent.com/zxcvos/Note/main/proxy/nginx/nginx_manage.sh
    ```
-2. 自定义编译安装
-   ```sh
-   bash -c "$(curl -L https://raw.githubusercontent.com/zxcvos/Note/main/proxy/nginx/nginx_compile.sh)"
-   ```
-### 更新 Nginx
-1. 使用 `apt upgrade nginx` 直接更新
-   ```sh
-   apt update -y
-   apt upgrade -y nginx
-   ```
-2. 自定义编译更新
-   1. 确保 nginx 备份目录的存在
+2. 安装 nginx
+   1. 默认安装，使用 apt、yum、dnf 进行安装
       ```sh
-      [ -d $HOME/nginx ] || mkdir -p $HOME/nginx
+      bash ${HOME}/nginx.sh
       ```
-   2. 创建当前 nginx 配置的备份
+   2. 编译安装
       ```sh
-      tar -czvf $HOME/nginx/nginx_$(date +'%F_%H-%M-%S').tar.gz /usr/local/nginx/conf
+      bash ${HOME}/nginx.sh -c
       ```
-   3. 更新
-      1. 平滑更新
-         1. 编译安装
-            ```sh
-            bash -c "$(curl -L https://raw.githubusercontent.com/zxcvos/Note/main/proxy/nginx/nginx_compile.sh)"
-            /usr/local/nginx/sbin/nginx -s reload
-            ```
-      2. 非平滑更新(重装更新)
-         1. 卸载当前 nginx
-            ```sh
-            systemctl -q is-active nginx && systemctl stop nginx
-            systemctl -q is-enabled nginx && systemctl disable nginx
-            rm -rf /etc/systemd/system/nginx.service
-            systemctl daemon-reload
-            rm -rf /usr/local/nginx
-            ```
-         2. 编译安装
-            ```sh
-            bash -c "$(curl -L https://raw.githubusercontent.com/zxcvos/Note/main/proxy/nginx/nginx_compile.sh)"
-            ```
+3. 更新 nginx
+   ```sh
+   bash ${HOME}/nginx.sh -u
+   ```
+4. 卸载 nginx
+   ```sh
+   bash ${HOME}/nginx.sh -p
+   ```
 ## 证书管理
 ### 管理 acme.sh
 * 安装
