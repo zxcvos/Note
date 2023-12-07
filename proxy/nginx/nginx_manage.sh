@@ -54,34 +54,6 @@ function _error() {
   exit 1
 }
 
-while [[ $# -ge 1 ]]; do
-  case "${1}" in
-  -i | --install)
-    shift
-    is_install=1
-    ;;
-  -c | --compile)
-    shift
-    is_compile=1
-    ;;
-  -u | --update)
-    shift
-    is_update=1
-    ;;
-  -p | --purge)
-    shift
-    is_purge=1
-    ;;
-  --with-log)
-    shift
-    is_with_log=1
-    ;;
-  *)
-    echo -ne "\nInvalid option: '$1'.\n"
-    ;;
-  esac
-done
-
 function _os() {
   local os=""
   [ -f "/etc/debian_version" ] && source /etc/os-release && os="${ID}" && printf -- "%s" "${os}" && return
@@ -409,6 +381,34 @@ function nginx_config() {
 }
 
 check_os
+
+while [[ $# -ge 1 ]]; do
+  case "${1}" in
+  -i | --install)
+    shift
+    is_install=1
+    ;;
+  -c | --compile)
+    shift
+    is_compile=1
+    ;;
+  -u | --update)
+    shift
+    is_update=1
+    ;;
+  -p | --purge)
+    shift
+    is_purge=1
+    ;;
+  --with-log)
+    shift
+    is_with_log=1
+    ;;
+  *)
+    echo -ne "\nInvalid option: '$1'.\n"
+    ;;
+  esac
+done
 
 if [[ ${is_install} -eq 1 ]]; then
   acme_dependencies
