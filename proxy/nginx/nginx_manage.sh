@@ -457,31 +457,40 @@ while [[ $# -ge 1 ]]; do
     shift
     is_with_log=1
     ;;
+  -h | --help)
+    echo "Usage: $0 [options]"
+    echo "Options:"
+    echo "  -i, --install      Install Nginx (default if no option provided)"
+    echo "  -c, --compile      Compile and install Nginx from source"
+    echo "  -u, --update       Update Nginx (detects if installed from package or source)"
+    echo "  -p, --purge        Uninstall and purge Nginx"
+    echo "  --with-log         Include log configurations"
+    echo ""
+    echo "Note:"
+    echo "  - The '-u' option is designed for updating Nginx installed through this script."
+    echo "    If Nginx was not installed by this script, using '-u' may lead to unexpected behavior."
+    exit 0
+    ;;
   *)
-    echo -ne "\nInvalid option: '$1'.\n"
+    _error "Invalid option: '$1'. Use '$0 -h/--help' for usage information."
     ;;
   esac
 done
 
-if [[ ${is_install} -eq 1 ]]; then
-  acme_dependencies
-  pkg_install
-elif [[ ${is_compile} -eq 1 ]]; then
-  acme_dependencies
-  source_compile
+if [[ ${is_compile} -eq 1 ]]; then
+  source_install
+  systemctl_config
+  nginx_config
 elif [[ ${is_update} -eq 1 ]]; then
   if [[ -d /etc/nginx ]]; then
-    pkg_install
+    pkg_update
   elif [[ -d /usr/local/nginx/conf ]]; then
-    cp -af /usr/local/nginx/conf ${TMPFILE_DIR}
-    source_compile
-    cp -af ${TMPFILE_DIR}/conf /usr/local/nginx
+    source_update
   fi
 elif [[ ${is_purge} -eq 1 ]]; then
   purge_nginx
-fi
-
-if [[ ${is_update} -ne 1 && ${is_purge} -ne 1 ]]; then
-  [[ ${is_install} -eq 1 || ${is_compile} -eq 1 ]] && systemctl_config
+elif [[ ${is_install} -eq 1 ]]; then
+  pkg_install
+  systemctl_config
   nginx_config
 fi
