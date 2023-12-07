@@ -54,6 +54,20 @@ function _error() {
   exit 1
 }
 
+# tools
+function _exists() {
+  local cmd="$1"
+  if eval type type >/dev/null 2>&1; then
+    eval type "$cmd" >/dev/null 2>&1
+  elif command >/dev/null 2>&1; then
+    command -v "$cmd" >/dev/null 2>&1
+  else
+    which "$cmd" >/dev/null 2>&1
+  fi
+  local rt=$?
+  return ${rt}
+}
+
 function _os() {
   local os=""
   [ -f "/etc/debian_version" ] && source /etc/os-release && os="${ID}" && printf -- "%s" "${os}" && return
@@ -80,20 +94,11 @@ function _error_detect() {
   fi
 }
 
-function _exists() {
-  local cmd="$1"
-  if eval type type >/dev/null 2>&1; then
-    eval type "$cmd" >/dev/null 2>&1
-  elif command >/dev/null 2>&1; then
-    command -v "$cmd" >/dev/null 2>&1
-  else
-    which "$cmd" >/dev/null 2>&1
-  fi
-  local rt=$?
-  return ${rt}
+function _version_ge() {
+  test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" == "$1"
 }
 
-function _install_update() {
+function _install() {
   local package_name="$@"
   case "$(_os)" in
   centos)
@@ -112,6 +117,25 @@ function _install_update() {
   ubuntu | debian)
     apt update -y
     _error_detect "apt install -y ${package_name}"
+    ;;
+  esac
+}
+
+function _update() {
+  local package_name="$@"
+  case "$(_os)" in
+  centos)
+    if _exists "yum"; then
+      yum update -y
+      _error_detect "yum update -y ${package_name}"
+    elif _exists "dnf"; then
+      dnf update -y
+      _error_detect "dnf update -y ${package_name}"
+    fi
+    ;;
+  ubuntu | debian)
+    apt update -y
+    _error_detect "apt upgrade -y ${package_name}"
     ;;
   esac
 }
