@@ -159,6 +159,7 @@ function _purge() {
   esac
 }
 
+# check os
 function check_os() {
   [ -z "$(_os)" ] && _error "Not supported OS"
   case "$(_os)" in
@@ -177,6 +178,7 @@ function check_os() {
   esac
 }
 
+# swap
 function swap_on() {
   local mem=${1}
   if [[ ${mem} -ne '0' ]]; then
