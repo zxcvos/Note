@@ -270,6 +270,4 @@ elif [[ -n "${domain}" ]]; then
   elif [[ ${is_show_info} -eq 1 ]]; then
     info_cert
   fi
-else
-  show_help
 fi
