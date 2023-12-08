@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
+#
+# Copyright (C) 2023 zxcvos
+#
+# acme.sh: https://github.com/acmesh-official/acme.sh
 
-# Author: zxcvos
-# Version: 0.1
-# Date: 2023-04-01
-
+# color
 readonly RED='\033[1;31;31m'
 readonly GREEN='\033[1;31;32m'
 readonly YELLOW='\033[1;31;33m'
 readonly NC='\033[0m'
 
-readonly op_regex='^(^--(help|update|purge|issue|(stop-)?renew|check-cron|info|domain|type|nginx|webroot|ssl)$)|(^-[upirscdtnws]$)$'
-readonly website_type=('cloudreve' 'vaultwarden' 'reader')
+# optional regex
+readonly op_regex='(^--(help|update|purge|issue|(stop-)?renew|check-cron|info|www|domain|nginx|webroot|ssl)$)|(^-[upirscdnws]$)'
 
+# optional
 declare is_update=0
 declare is_purge=0
 declare is_issue=0
@@ -19,33 +21,141 @@ declare is_renew=0
 declare is_stop_renew=0
 declare is_check_cron=0
 declare is_show_info=0
+declare is_www=0
+
+# optional value
 declare domain=''
-declare default_domain=''
-declare cloudreve_domain=''
-declare vaultwarden_domain=''
-declare reader_domain=''
-declare pick_type=0
+declare www_domain=''
 declare nginx_path=''
 declare webroot_path=''
 declare ssl_path=''
 
+# status print
 function _info() {
   printf "${GREEN}[Info] ${NC}"
-  printf -- "%s" "$1"
+  printf -- "%s" "$@"
   printf "\n"
 }
 
 function _warn() {
   printf "${YELLOW}[Warning] ${NC}"
-  printf -- "%s" "$1"
+  printf -- "%s" "$@"
   printf "\n"
 }
 
 function _error() {
   printf "${RED}[Error] ${NC}"
-  printf -- "%s" "$1"
+  printf -- "%s" "$@"
   printf "\n"
   exit 1
+}
+
+# install
+function install_acme_sh() {
+  curl https://get.acme.sh | sh
+  ${HOME}/.acme.sh/acme.sh --upgrade --auto-upgrade
+  ${HOME}/.acme.sh/acme.sh --set-default-ca --server letsencrypt
+}
+
+# update
+function update_acme_sh() {
+  ${HOME}/.acme.sh/acme.sh --upgrade
+}
+
+# purge
+function purge_acme_sh() {
+  ${HOME}/.acme.sh/acme.sh --upgrade --auto-upgrade 0
+  ${HOME}/.acme.sh/acme.sh --uninstall
+  rm -rf ${HOME}/.acme.sh
+  rm -rf "${webroot_path}"
+  rm -rf "${ssl_path}"
+}
+
+# issue
+function issue_cert() {
+  [ -d "${webroot_path}" ] || mkdir -p "${webroot_path}"
+  [ -d "${ssl_path}" ] || mkdir -p "${ssl_path}"
+
+  mv ${nginx_path}/nginx.conf ${nginx_path}/nginx.conf.bak
+  cat >"${nginx_path}/nginx.conf" <<EOF
+user                 root;
+pid                  /run/nginx.pid;
+worker_processes     1;
+events {
+    worker_connections  1024;
+}
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+    sendfile        on;
+    keepalive_timeout  65;
+    server {
+        listen       80;
+        location ^~ /.well-known/acme-challenge/ {
+            root /var/www/_letsencrypt;
+        }
+    }
+}
+EOF
+  if systemctl is-active --quiet nginx; then
+    nginx -t && systemctl reload nginx
+  else
+    nginx -t && systemctl start nginx
+  fi
+
+  ${HOME}/.acme.sh/acme.sh --issue -d ${domain} ${www_domain} \
+    --webroot ${webroot_path} \
+    --keylength ec-256 \
+    --accountkeylength ec-256 \
+    --server letsencrypt \
+    --ocsp
+
+  mv -f ${nginx_path}/nginx.conf.bak ${nginx_path}/nginx.conf
+  nginx -t && systemctl reload nginx
+
+  ${HOME}/.acme.sh/acme.sh --install-cert --ecc -d ${domain} ${www_domain} \
+    --key-file "${ssl_path}/privkey.pem" \
+    --fullchain-file "${ssl_path}/fullchain.pem" \
+    --reloadcmd "nginx -t && systemctl reload nginx"
+}
+
+# renew
+function renew_cert() {
+  ${HOME}/.acme.sh/acme.sh --cron --force
+}
+
+# stop renew
+function stop_renew_cert() {
+  ${HOME}/.acme.sh/acme.sh --remove ${domain} ${www_domain} --ecc
+}
+
+# check crontab
+function check_cron() {
+  ${HOME}/.acme.sh/acme.sh --cron --home ${HOME}/.acme.sh
+}
+
+# info
+function info_cert() {
+  ${HOME}/.acme.sh/acme.sh --info -d ${domain}
+}
+
+# help
+function show_help() {
+  echo "Usage: $0 [OPTIONS]"
+  echo "Options:"
+  echo "  -u, --update        Update acme.sh"
+  echo "  -p, --purge         Uninstall acme.sh and remove related directories"
+  echo "  -i, --issue         Issue/renew SSL certificate"
+  echo "  -r, --renew         Force renew all SSL certificates"
+  echo "  -s, --stop-renew    Stop renewing the specified SSL certificate"
+  echo "  -c, --check-cron    Check crontab settings for automatic renewal"
+  echo "      --info          Show information about the SSL certificate"
+  echo "      --www           Include 'www.' domain in the certificate"
+  echo "  -d, --domain        Domain name (e.g., $0 -i -d example.com)"
+  echo "  -n, --nginx         Nginx configuration path (e.g., $0 -i ... -n /etc/nginx)"
+  echo "  -w, --webroot       ACME-challenge directory path (e.g., $0 -i ... -w /var/www/_letsencrypt)"
+  echo "  -s, --ssl           SSL directory path (e.g.,  $0 -i ... -s /etc/nginx/ssl/example.com)"
+  exit 0
 }
 
 while [[ $# -ge 1 ]]; do
@@ -78,16 +188,14 @@ while [[ $# -ge 1 ]]; do
     shift
     is_show_info=1
     ;;
+  --www)
+    shift
+    is_www=1
+    ;;
   -d | --domain)
     shift
     (printf "%s" "${1}" | grep -Eq "${op_regex}" || [ -z "$1" ]) && _error 'domain not provided'
     domain="$1"
-    shift
-    ;;
-  -t | --type)
-    shift
-    (printf "%s" "${1}" | grep -Eq "${op_regex}" || [ -z "$1" ]) && _error 'type not provided'
-    pick_type="$1"
     shift
     ;;
   -n | --nginx)
@@ -108,63 +216,17 @@ while [[ $# -ge 1 ]]; do
     ssl_path="$1"
     shift
     ;;
+  -h | --help)
+    show_help
+    ;;
   *)
-    echo -ne "\nInvalid option: '$1'.\n"
+    _error "Invalid option: '$1'. Use '$0 -h/--help' for usage information."
     ;;
   esac
 done
 
-function install_acme_sh() {
-  curl https://get.acme.sh | sh
-  ${HOME}/.acme.sh/acme.sh --upgrade --auto-upgrade
-  ${HOME}/.acme.sh/acme.sh --set-default-ca --server letsencrypt
-}
-
-function update_acme_sh() {
-  ${HOME}/.acme.sh/acme.sh --upgrade
-}
-
-function purge_acme_sh() {
-  ${HOME}/.acme.sh/acme.sh --upgrade --auto-upgrade 0
-  ${HOME}/.acme.sh/acme.sh --uninstall
-  rm -rf ${HOME}/.acme.sh
-  rm -rf "${webroot_path}"
-  rm -rf "${ssl_path}"
-}
-
-function issue_cert() {
-  [ -d "${webroot_path}" ] || mkdir -p "${webroot_path}"
-  [ -d "${ssl_path}/${domain}" ] || mkdir -p "${ssl_path}/${domain}"
-  sed -i -r 's/(listen .*443)/\1; #/g; s/(ssl_(certificate|certificate_key) )/#;#\1/g; s/(server \{)/\1\n    ssl off;/g' ${nginx_path}/sites-available/${domain}.conf
-  grep -Eqv '^#' ${nginx_path}/conf.d/restrict.conf && sed -i 's/^/#/' ${nginx_path}/conf.d/restrict.conf
-  nginx -t && _systemctl "restart" "nginx"
-  ${HOME}/.acme.sh/acme.sh --issue --server letsencrypt ${default_domain} ${cloudreve_domain} ${vaultwarden_domain} ${reader_domain} --webroot /var/www/_letsencrypt --keylength ec-256 --accountkeylength ec-256 --ocsp
-  [ $? -ne 0 ] && ${HOME}/.acme.sh/acme.sh --issue --server letsencrypt ${default_domain} ${cloudreve_domain} ${vaultwarden_domain} ${reader_domain} --webroot /var/www/_letsencrypt --keylength ec-256 --accountkeylength ec-256 --ocsp --debug && _error 'Issue cert error'
-  sed -i -r -z 's/#?; ?#//g; s/(server \{)\n    ssl off;/\1/g' ${nginx_path}/sites-available/${domain}.conf
-  sed -i 's/^#//' ${nginx_path}/conf.d/restrict.conf
-  ${HOME}/.acme.sh/acme.sh --install-cert --ecc ${default_domain} ${cloudreve_domain} ${vaultwarden_domain} ${reader_domain} --key-file ${nginx_path}/ssl/${domain}/privkey.pem --fullchain-file ${nginx_path}/ssl/${domain}/fullchain.pem --reloadcmd "nginx -t && systemctl reload nginx"
-}
-
-function renew_cert() {
-  ${HOME}/.acme.sh/acme.sh --cron --force
-}
-
-function stop_renew_cert() {
-  ${HOME}/.acme.sh/acme.sh --remove ${default_domain} ${cloudreve_domain} ${vaultwarden_domain} ${reader_domain} --ecc
-}
-
-function check_cron() {
-  ${HOME}/.acme.sh/acme.sh --cron --home ${HOME}/.acme.sh
-}
-
-function info_cert() {
-  ${HOME}/.acme.sh/acme.sh --info -d ${domain}
-}
-
-if [[ "${domain}" ]]; then
-  default_domain="-d ${domain} -d www.${domain}"
-else
-  _error "domain not provided"
+if [[ ! -e ${HOME}/.acme.sh/acme.sh ]]; then
+  install_acme_sh
 fi
 
 if [[ -z "${nginx_path}" ]]; then
@@ -173,7 +235,7 @@ if [[ -z "${nginx_path}" ]]; then
   elif [[ -d /usr/local/nginx/conf ]]; then
     nginx_path="/usr/local/nginx/conf"
   else
-    _error 'nginx configuration path not found'
+    _error 'Nginx configuration path not found'
   fi
 fi
 
@@ -182,52 +244,32 @@ if [[ -z "${webroot_path}" ]]; then
 fi
 
 if [[ -z "${ssl_path}" ]]; then
-  ssl_path="${nginx_path}/ssl"
+  ssl_path="${nginx_path}/ssl/${domain}"
 fi
 
-case "${pick_type}" in
-1)
-  cloudreve_domain="-d pan.${domain}"
-  ;;
-2)
-  vaultwarden_domain="-d vw.${domain}"
-  ;;
-3)
-  reader_domain="-d read.${domain}"
-  ;;
-*)
-  cloudreve_domain=""
-  vaultwarden_domain=""
-  reader_domain=""
-  ;;
-esac
-
-[ ! -d ${HOME}/.acme.sh ] && install_acme_sh
+if [[ ${is_www} -eq 1 ]]; then
+  www_domain="-d www.${domain}"
+fi
 
 if [[ ${is_update} -eq 1 ]]; then
   update_acme_sh
-fi
-
-if [[ ${is_purge} -eq 1 ]]; then
+elif [[ ${is_purge} -eq 1 ]]; then
   purge_acme_sh
-fi
-
-if [[ ${is_issue} -eq 1 ]]; then
-  issue_cert
-fi
-
-if [[ ${is_check_cron} -eq 1 ]]; then
-  check_cron
-fi
-
-if [[ ${is_renew} -eq 1 ]]; then
+elif [[ ${is_renew} -eq 1 ]]; then
   renew_cert
-fi
-
-if [[ ${is_stop_renew} -eq 1 ]]; then
-  stop_renew_cert
-fi
-
-if [[ ${is_show_info} -eq 1 ]]; then
-  info_cert
+elif [[ ${is_check_cron} -eq 1 ]]; then
+  check_cron
+elif [[ -n "${domain}" ]]; then
+  if [[ ${is_issue} -eq 1 ]]; then
+    issue_cert
+  elif [[ ${is_stop_renew} -eq 1 ]]; then
+    if [[ ${is_www} -eq 1 ]]; then
+      www_domain="www.${domain}"
+    fi
+    stop_renew_cert
+  elif [[ ${is_show_info} -eq 1 ]]; then
+    info_cert
+  fi
+else
+  show_help
 fi
