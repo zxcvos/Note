@@ -190,6 +190,24 @@ function swap_on() {
   fi
 }
 
+# backup file
+function backup_files() {
+  backup_dir="$1"
+
+  # 获取当前日期
+  current_date=$(date +%F)
+
+  # 遍历 modules 目录下的所有文件，并备份到指定目录
+  for file in "$backup_dir/"*; do
+    if [ -f "$file" ]; then
+      file_name=$(basename "$file")
+      backup_file="$backup_dir/$file_name_$current_date"
+      mv "$file" "$backup_file"
+      echo "Backup: $file -> $backup_file"
+    fi
+  done
+}
+
 # dependencies
 function install_dependencies() {
   case "$(_os)" in
@@ -347,9 +365,10 @@ function source_update() {
   if _version_ge ${latest_nginx_version#*-} ${current_version_nginx} || _version_ge ${latest_openssl_version#*-} ${current_version_openssl}; then
     source_compile
     _info "Updating Nginx"
-    rm -rf /usr/sbin/nginx
     mv /usr/local/nginx/sbin/nginx /usr/local/nginx/sbin/nginx_$(date +%F)
+    backup_files /usr/local/nginx/modules
     cp objs/nginx /usr/local/nginx/sbin/
+    cp objs/*.so /usr/local/nginx/modules/
     ln -sf /usr/local/nginx/sbin/nginx /usr/sbin/nginx
     if systemctl is-active --quiet nginx; then
       kill -USR2 $(cat /run/nginx.pid) && sleep 1
