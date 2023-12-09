@@ -192,18 +192,15 @@ function swap_on() {
 
 # backup file
 function backup_files() {
-  backup_dir="$1"
+  local backup_dir="$1"
+  local current_date=$(date +%F)
 
-  # 获取当前日期
-  current_date=$(date +%F)
-
-  # 遍历 modules 目录下的所有文件，并备份到指定目录
-  for file in "$backup_dir/"*; do
+  for file in "${backup_dir}/"*; do
     if [ -f "$file" ]; then
-      file_name=$(basename "$file")
-      backup_file="$backup_dir/$file_name_$current_date"
+      local file_name=$(basename "$file")
+      local backup_file="${backup_dir}/${file_name}_${current_date}"
       mv "$file" "$backup_file"
-      echo "Backup: $file -> $backup_file"
+      echo "Backup: ${file} -> ${backup_file}"
     fi
   done
 }
@@ -364,17 +361,20 @@ function source_update() {
   local current_version_openssl="$(nginx -V 2>&1 | grep "^built with OpenSSL" | awk '{print $4}')"
   if _version_ge ${latest_nginx_version#*-} ${current_version_nginx} || _version_ge ${latest_openssl_version#*-} ${current_version_openssl}; then
     source_compile
-    _info "Updating Nginx"
     mv /usr/local/nginx/sbin/nginx /usr/local/nginx/sbin/nginx_$(date +%F)
     backup_files /usr/local/nginx/modules
     cp objs/nginx /usr/local/nginx/sbin/
     cp objs/*.so /usr/local/nginx/modules/
     ln -sf /usr/local/nginx/sbin/nginx /usr/sbin/nginx
     if systemctl is-active --quiet nginx; then
-      kill -USR2 $(cat /run/nginx.pid) && sleep 1
-      kill -WINCH $(cat /run/nginx.pid.oldbin) && sleep 1
-      kill -HUP $(cat /run/nginx.pid.oldbin) && sleep 1
-      kill -QUIT $(cat /run/nginx.pid.oldbin)
+      kill -USR2 $(cat /run/nginx.pid)
+      if [ -e "/run/nginx.pid.oldbin" ]; then
+        kill -WINCH $(cat /run/nginx.pid.oldbin)
+        kill -HUP $(cat /run/nginx.pid.oldbin)
+        kill -QUIT $(cat /run/nginx.pid.oldbin)
+      else
+        echo "Old Nginx process not found. Skipping further steps."
+      fi
     fi
   fi
 }
