@@ -223,13 +223,13 @@
   * 添加定时任务
 
     ```sh
-    crontab -l | { cat; echo "30 22 * * * ${HOME}/update_dat.sh >/dev/null 2>&1"; } | uniq | crontab -
+    (crontab -l 2>/dev/null; echo "30 22 * * * ${HOME}/update_dat.sh >/dev/null 2>&1") | awk '!x[$0]++' | crontab -
     ```
 
   * 删除定时任务
 
     ```sh
-    crontab -l | grep -v "${HOME}/update_dat.sh >/dev/null 2>&1" | crontab -
+    (crontab -l 2>/dev/null | grep -v "${HOME}/update_dat.sh >/dev/null 2>&1") | crontab -
     ```
 
 * 完成
