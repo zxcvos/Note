@@ -21,6 +21,10 @@
    ```sh
    bash ${HOME}/nginx.sh -p
    ```
+5. 添加 nginx 定期更新任务
+   ```sh
+   (crontab -l 2>/dev/null; echo "0 6 15 * * ${HOME}/nginx.sh -u >/dev/null 2>&1") | awk '!x[$0]++' | crontab -
+   ```
 ## 证书管理
 ### 管理 acme.sh
 * 安装
