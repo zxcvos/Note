@@ -21,11 +21,9 @@ declare is_renew=0
 declare is_stop_renew=0
 declare is_check_cron=0
 declare is_show_info=0
-declare is_www=0
 
 # optional value
-declare domain=''
-declare www_domain=''
+declare domain=()
 declare nginx_path=''
 declare webroot_path=''
 declare ssl_path=''
@@ -103,7 +101,7 @@ EOF
     nginx -t && systemctl start nginx
   fi
 
-  ${HOME}/.acme.sh/acme.sh --issue -d ${domain} ${www_domain} \
+  ${HOME}/.acme.sh/acme.sh --issue $(printf -- " -d %s" "${domain[@]}") \
     --webroot ${webroot_path} \
     --keylength ec-256 \
     --accountkeylength ec-256 \
@@ -113,7 +111,7 @@ EOF
   mv -f ${nginx_path}/nginx.conf.bak ${nginx_path}/nginx.conf
   nginx -t && systemctl reload nginx
 
-  ${HOME}/.acme.sh/acme.sh --install-cert --ecc -d ${domain} ${www_domain} \
+  ${HOME}/.acme.sh/acme.sh --install-cert --ecc $(printf -- " -d %s" "${domain[@]}") \
     --key-file "${ssl_path}/privkey.pem" \
     --fullchain-file "${ssl_path}/fullchain.pem" \
     --reloadcmd "nginx -t && systemctl reload nginx"
@@ -126,7 +124,7 @@ function renew_cert() {
 
 # stop renew
 function stop_renew_cert() {
-  ${HOME}/.acme.sh/acme.sh --remove ${domain} ${www_domain} --ecc
+  ${HOME}/.acme.sh/acme.sh --remove $(printf -- " -d %s" "${domain[@]}") --ecc
 }
 
 # check crontab
@@ -136,12 +134,13 @@ function check_cron() {
 
 # info
 function info_cert() {
-  ${HOME}/.acme.sh/acme.sh --info -d ${domain}
+  ${HOME}/.acme.sh/acme.sh --info $(printf -- " -d %s" "${domain[@]}")
 }
 
 # help
 function show_help() {
   echo "Usage: $0 [OPTIONS]"
+  echo ""
   echo "Options:"
   echo "  -u, --update        Update acme.sh"
   echo "  -p, --purge         Uninstall acme.sh and remove related directories"
@@ -150,11 +149,12 @@ function show_help() {
   echo "  -s, --stop-renew    Stop renewing the specified SSL certificate"
   echo "  -c, --check-cron    Check crontab settings for automatic renewal"
   echo "      --info          Show information about the SSL certificate"
-  echo "      --www           Include 'www.' domain in the certificate"
-  echo "  -d, --domain        Domain name (e.g., $0 -i -d example.com)"
-  echo "  -n, --nginx         Nginx configuration path (e.g., $0 -i ... -n /etc/nginx)"
-  echo "  -w, --webroot       ACME-challenge directory path (e.g., $0 -i ... -w /var/www/_letsencrypt)"
-  echo "  -s, --ssl           SSL directory path (e.g.,  $0 -i ... -s /etc/nginx/ssl/example.com)"
+  echo "  -d, --domain        Specify a domain (use multiple times for multiple domains)"
+  echo "  -n, --nginx         Specify the Nginx configuration path"
+  echo "  -w, --webroot       Specify the ACME-challenge directory path"
+  echo "  -t, --tls           Specify the SSL directory path (default: based on the first domain)"
+  echo "  -h, --help          Show this help message"
+  echo ""
   exit 0
 }
 
@@ -188,14 +188,10 @@ while [[ $# -ge 1 ]]; do
     shift
     is_show_info=1
     ;;
-  --www)
-    shift
-    is_www=1
-    ;;
   -d | --domain)
     shift
     (printf "%s" "${1}" | grep -Eq "${op_regex}" || [ -z "$1" ]) && _error 'domain not provided'
-    domain="$1"
+    domain+=("$1")
     shift
     ;;
   -n | --nginx)
@@ -210,7 +206,7 @@ while [[ $# -ge 1 ]]; do
     webroot_path="$1"
     shift
     ;;
-  -s | --ssl)
+  -t | --tls)
     shift
     (printf "%s" "${1}" | grep -Eq "${op_regex}" || [ -z "$1" ]) && _error 'ssl directory path not provided'
     ssl_path="$1"
@@ -244,11 +240,7 @@ if [[ -z "${webroot_path}" ]]; then
 fi
 
 if [[ -z "${ssl_path}" ]]; then
-  ssl_path="${nginx_path}/ssl/${domain}"
-fi
-
-if [[ ${is_www} -eq 1 ]]; then
-  www_domain="-d www.${domain}"
+  ssl_path="${nginx_path}/ssl/${domain[0]}"
 fi
 
 if [[ ${is_update} -eq 1 ]]; then
@@ -259,13 +251,10 @@ elif [[ ${is_renew} -eq 1 ]]; then
   renew_cert
 elif [[ ${is_check_cron} -eq 1 ]]; then
   check_cron
-elif [[ -n "${domain}" ]]; then
+elif [[ ${#domain[@]} -gt 0 ]]; then
   if [[ ${is_issue} -eq 1 ]]; then
     issue_cert
   elif [[ ${is_stop_renew} -eq 1 ]]; then
-    if [[ ${is_www} -eq 1 ]]; then
-      www_domain="www.${domain}"
-    fi
     stop_renew_cert
   elif [[ ${is_show_info} -eq 1 ]]; then
     info_cert
