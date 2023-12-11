@@ -164,7 +164,7 @@ function check_os() {
   [ -z "$(_os)" ] && _error "Not supported OS"
   case "$(_os)" in
   ubuntu)
-    [ -n "$(_os_ver)" -a "$(_os_ver)" -lt 16 ] && _error "Not supported OS, please change to Ubuntu 16+ and try again."
+    [ -n "$(_os_ver)" -a "$(_os_ver)" -lt 18 ] && _error "Not supported OS, please change to Ubuntu 18+ and try again."
     ;;
   debian)
     [ -n "$(_os_ver)" -a "$(_os_ver)" -lt 10 ] && _error "Not supported OS, please change to Debian 10+ and try again."
