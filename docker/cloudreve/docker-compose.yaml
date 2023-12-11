@@ -7,13 +7,13 @@ services:
     networks:
       - share_net
     ports:
-      - "20233:5212"
+      - "5212:5212"
     volumes:
       - temp_data:/data
-      - ./cloudreve/uploads:/cloudreve/uploads
-      - ./cloudreve/conf.ini:/cloudreve/conf.ini
-      - ./cloudreve/cloudreve.db:/cloudreve/cloudreve.db
-      - ./cloudreve/avatar:/cloudreve/avatar
+      - /usr/local/cloudreve/cloudreve/uploads:/cloudreve/uploads
+      - /usr/local/cloudreve/cloudreve/conf.ini:/cloudreve/conf.ini
+      - /usr/local/cloudreve/cloudreve/cloudreve.db:/cloudreve/cloudreve.db
+      - /usr/local/cloudreve/cloudreve/avatar:/cloudreve/avatar
     depends_on:
       - aria2
   aria2:
@@ -26,7 +26,7 @@ services:
       - RPC_SECRET=your_aria_rpc_token
       - RPC_PORT=6800
     volumes:
-      - ./aria2/config:/config
+      - /usr/local/cloudreve/aria2/config:/config
       - temp_data:/data
   watchtower:
     image: containrrr/watchtower
