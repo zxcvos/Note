@@ -1,59 +1,56 @@
 #!/usr/bin/env bash
-
-# Author: zxcvos
-# Version: 0.1
-# Date: 2023-04-03
+#
+# Copyright (C) 2023 zxcvos
+#
+# documentation: https://docs.docker.com/engine/install/
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin:/snap/bin
 export PATH
 
-declare RED='\033[1;31;31m'
-declare GREEN='\033[1;31;32m'
-declare YELLOW='\033[1;31;33m'
-declare NC='\033[0m'
+# color
+readonly RED='\033[1;31;31m'
+readonly GREEN='\033[1;31;32m'
+readonly YELLOW='\033[1;31;33m'
+readonly NC='\033[0m'
 
+# optional
 declare is_install=0
 declare is_update=0
 declare is_remove=0
 
+# status print
 function _info() {
   printf "${GREEN}[Info] ${NC}"
-  printf -- "%s" "$1"
+  printf -- "%s" "$@"
   printf "\n"
 }
 
 function _warn() {
   printf "${YELLOW}[Warning] ${NC}"
-  printf -- "%s" "$1"
+  printf -- "%s" "$@"
   printf "\n"
 }
 
 function _error() {
   printf "${RED}[Error] ${NC}"
-  printf -- "%s" "$1"
+  printf -- "%s" "$@"
   printf "\n"
   exit 1
 }
 
-while [[ $# -ge 1 ]]; do
-  case "${1}" in
-  -i | --install)
-    shift
-    is_install=1
-    ;;
-  -u | --update)
-    shift
-    is_update=1
-    ;;
-  -r | --remove)
-    shift
-    is_remove=1
-    ;;
-  *)
-    echo -ne "\nInvalid option: '$1'.\n"
-    ;;
-  esac
-done
+# tools
+function _exists() {
+  local cmd="$1"
+  if eval type type >/dev/null 2>&1; then
+    eval type "$cmd" >/dev/null 2>&1
+  elif command >/dev/null 2>&1; then
+    command -v "$cmd" >/dev/null 2>&1
+  else
+    which "$cmd" >/dev/null 2>&1
+  fi
+  local rt=$?
+  return ${rt}
+}
 
 function _os() {
   local os=""
@@ -70,19 +67,6 @@ function _os_full() {
 function _os_ver() {
   local main_ver="$(echo $(_os_full) | grep -oE "[0-9.]+")"
   printf -- "%s" "${main_ver%%.*}"
-}
-
-function _exists() {
-  local cmd="$1"
-  if eval type type >/dev/null 2>&1; then
-    eval type "$cmd" >/dev/null 2>&1
-  elif command >/dev/null 2>&1; then
-    command -v "$cmd" >/dev/null 2>&1
-  else
-    which "$cmd" >/dev/null 2>&1
-  fi
-  local rt=$?
-  return ${rt}
 }
 
 function check_os() {
@@ -103,6 +87,7 @@ function check_os() {
   esac
 }
 
+# install or update
 function install_docker() {
   case "$(_os)" in
   centos)
@@ -113,7 +98,7 @@ function install_docker() {
       sudo yum-config-manager \
         --add-repo \
         https://download.docker.com/linux/centos/docker-ce.repo
-      sudo yum install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+      sudo yum install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
     elif _exists "dnf"; then
       sudo dnf update -y
       sudo dnf install -y dnf-plugins-core
@@ -121,7 +106,7 @@ function install_docker() {
       sudo dnf config-manager \
         --add-repo \
         https://download.docker.com/linux/centos/docker-ce.repo
-      sudo dnf install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+      sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
     fi
     ;;
   debian | ubuntu)
@@ -143,6 +128,7 @@ function install_docker() {
   esac
 }
 
+# remove
 function remove_docker() {
   case "$(_os)" in
   centos)
@@ -166,6 +152,41 @@ function remove_docker() {
 }
 
 check_os
+
+while [[ $# -ge 1 ]]; do
+  case "${1}" in
+  -i | --install)
+    shift
+    is_install=1
+    ;;
+  -u | --update)
+    shift
+    is_update=1
+    ;;
+  -r | --remove)
+    shift
+    is_remove=1
+    ;;
+  -h | --help)
+    cat <<EOF
+Usage: $0 [options]
+
+Options:
+  -i, --install      Install Docker
+  -u, --update       Update Docker
+  -r, --remove       Remove Docker
+
+Examples:
+  $0 -i    # Install Docker
+  $0 -u    # Update Docker
+  $0 -r    # Remove Docker
+EOF
+    ;;
+  *)
+    _error "Invalid option: '$1'. Use '$0 -h/--help' for usage information."
+    ;;
+  esac
+done
 
 if [[ ${is_install} -eq 1 ]]; then
   remove_docker
