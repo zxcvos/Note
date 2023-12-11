@@ -429,7 +429,7 @@ EOF
 
 function nginx_config() {
   local nginx_path=/usr/local/nginx/conf
-  if [[ ${is_install} -eq 1 ]]; then
+  if [[ ${is_compile} -ne 1 ]]; then
     nginx_path=/etc/nginx
   fi
   cd ${nginx_path}
