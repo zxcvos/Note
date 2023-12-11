@@ -27,3 +27,7 @@ cd /usr/local/reader \
 && docker compose pull \
 && docker compose up -d
 ```
+
+## 感谢
+
+[reader: 阅读3服务器版](https://github.com/hectorqin/reader)

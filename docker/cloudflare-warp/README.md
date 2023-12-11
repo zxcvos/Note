@@ -31,3 +31,9 @@ docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' clou
 ```shell
 docker run --rm curlimages/curl --connect-timeout 2 -x "socks5://172.17.0.2:40001" ipinfo.io
 ```
+
+## 感谢
+
+[haoel/haoel.github.io](https://github.com/haoel/haoel.github.io?tab=readme-ov-file#1043-docker-代理)
+
+[e7h4n/cloudflare-warp](https://github.com/e7h4n/cloudflare-warp)

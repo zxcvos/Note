@@ -49,3 +49,7 @@ chmod a+x docker_manage.sh
 ### 注意事项
 
 - 更新选项 (`-u`) 旨在用于更新通过此脚本安装的 Docker。如果 Docker 不是通过此脚本安装的，则使用 `-u` 可能导致意外行为。
+
+## 感谢
+
+[Install Docker Engine | Docker Docs](https://docs.docker.com/engine/install/)

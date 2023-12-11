@@ -39,3 +39,7 @@ cd /usr/local/cloudreve \
 && docker compose pull \
 && docker compose up -d
 ```
+
+## 感谢
+
+[Cloudreve](https://docs.cloudreve.org/)
