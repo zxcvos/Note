@@ -331,19 +331,17 @@ function source_compile() {
   _info "Download the latest versions of OpenSSL"
   _error_detect "wget -O ${openssl_version}.tar.gz https://github.com/openssl/openssl/archive/${openssl_version#*-}.tar.gz"
   tar -zxf ${openssl_version}.tar.gz
-
-  # _info "Download the latest versions of Brotli"
+  # _info "Checkout the latest ngx_brotli and build the dependencies"
   # _error_detect "git clone https://github.com/google/ngx_brotli"
   # cd ngx_brotli
   # _error_detect "git submodule update --init"
-
+  _info "Checkout the latest ngx_brotli and build the dependencies"
   _error_detect "git clone --recurse-submodules -j8 https://github.com/google/ngx_brotli"
   cd ngx_brotli/deps/brotli
   mkdir out && cd out
   _error_detect 'cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_C_FLAGS="-Ofast -m64 -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -Wl,--gc-sections" -DCMAKE_CXX_FLAGS="-Ofast -m64 -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -Wl,--gc-sections" -DCMAKE_INSTALL_PREFIX=./installed ..'
   _error_detect 'cmake --build . --config Release --target brotlienc'
   cd ${TMPFILE_DIR}
-
   cd ${nginx_version}
   sed -i "s/OPTIMIZE[ \\t]*=>[ \\t]*'-O'/OPTIMIZE          => '-O3'/g" src/http/modules/perl/Makefile.PL
   sed -i 's/NGX_PERL_CFLAGS="$CFLAGS `$NGX_PERL -MExtUtils::Embed -e ccopts`"/NGX_PERL_CFLAGS="`$NGX_PERL -MExtUtils::Embed -e ccopts` $CFLAGS"/g' auto/lib/perl/conf
@@ -442,23 +440,6 @@ EOF
   systemctl daemon-reload
 }
 
-function nginx_config() {
-  local nginx_path=/usr/local/nginx/conf
-  if [[ ${is_compile} -ne 1 ]]; then
-    nginx_path=/etc/nginx
-  fi
-  cd ${nginx_path}
-  echo 'H4sIADmrK2QCA+0ba3PbNjKf9StQxW2eJEW97FqjyaROUmcmvniidK53caKDSFDCGQRYAJSlXJLffguQFB9S7HQm8VyupiySAvYB7GIXuwDM55Sv3EDw6NY3uzpw7e/v2ydczefQ73Zv+f2+393vDvr7/i0LPhigzq1ruFKlsUTo1l/0uo1+JZxIrEmIZmvEzXAwo4HOXSpat9GEkFqhXmkUCYn0gqCsKAVkKjhSCywJYpSft1qpIiDTxiWF0KNWQsOtGuTJlHuWjQv1o9aFkOdEThMpAqIUURYIp1psqiSjMdVTLiLKCBoOBr3BqAXtfSFwiGIRpoyoFuUBS0PS4JUq6TERYJZx9Ew3vBzFIRzPGAm9+9YmgCRZEq4V+k/L4MYp03SKg4AkOicn+MhW5e0CLE4CIxBVtOpjq7XQOslJBCAmRXRTAqmOnIOMkiI8tL2qXwUjHSTQ7SRVi0uqQ8Lwelc1KGYJzdTinHBVqY6irJ6JOaDraSRSHu6o1+uEqOkCq8U0xqupou9tO7ud/sEWwCwNzonOYIb9rDpgFORpcWciXBcEBp0TkLUBuI1Onp88ta871QdKoDFxLZuMZEgiDHqZmqIKGE4SRgM7Nj0RaKIdpSXB8YbPCzEH/c/tL6NSpabQ+7pQi24TKYXcqkZeSJYeTxnbEJ1MXmRyVmwKA1cB96mGBovUqtwPR1vVAQ4WecOtDYWHQOTQ78SjHZSMRNWmaTnTJzSKKHGOCWMx5ijBEsdEgwkaS31y/BQFNFkQqVKqwSoKouHCAl5tGzmgm5BSeCfiPWUMo+cc+MQkpOBB6g5hwwesWItAsMpwe/1isvTdbv7slR3NG1pt09Mj6IED98lj5/HTid89cH49OnEmx4+7g+FhVvvqkroNJhQVtb2Dfh1zZ12GeXT8GP66Hef05Yt/+L3OoIK5Xff51nyW20amL48mp2iiMYzbfFha3ecFu4y5Uj0Fs6bRulotiRJsueWJfdd+4NmBj48OXPuxz77bB1s+cIf7brfbNd/yZ8d80RIzGo6HHVXnUR3kxh+oTa+ONh4RLQgO81H5dzKbCDOYgQKgK4JgmKzWmZfFCdozLnOaJnMJKGivdKubssydVhwAymtGm4p2O3sGTKi8+GOrZCFJLDSZ4jCUaM+yB7cnL7AMSTgljMTAY0PrNnp+uuwjA5xNSQFY2owYb60RVg5VG9BP7950nJ/dtw/2Ng0BuuMqv/aoQXlYocwJTMZaGOoziY2Q4DcGd/xHCvhhg89j5xl2okPLzvI5a7+psnp71q5z+43TFQpFjClM2pkOOPgL2yNw/YatJAm0BXoGjAHq1bMjtN/t/YzUmmu82hJ8edkGpPyciwve3pa4VepGxoXQoZWVwrrMIxtpwEwgYmMDzzZg+ViiKmsUjA3wWmydjc+HxvvDNGqkSHU5Hj69u/vwDTo702/v37t/980Pt/d+/OnO/Qfuu+m/Pnyysvwndt47bx+ML6v8cNa++waIAKFV1ze3ngP3wS/m9sS87j+F20HHvD579vbDGVwlwjbAvftn7Xv3Ht0d/c81yUgpk9fD4uVGbF8iNvPda6N2Y8g/3O1o6gb6Eoa8vKCKPDSGyHBAqoO4MLr25yhVjC6Ph7N5WdWCqt1Tvbm5ZfR7NYIyIUUZNUO0e+vm+o6uTH94iSkzKvTICscJI6D/+KutClyR//f83n4j//f7vt+9yf+vQ/82H8yDKUaVJnw7Pe/3eybWRMaXdcEnQXqfCKlHlyK9OTx8e3gpZp6LmuCjhnlxceFWxuHO3CogUtPI5Hclrkd04DHIjwgP5DrRHqPL2oj2IkjVIAGnPMtldhCbnpP1FxJLJF0CdJ2UljCgwBdX23c1qUqb8r4qEqSS6vVliXBjtcYrcIqli4wSuzrNRd4SG98+zz17BuYaMGjdjHKzOJRGEZHjgd89RxFL1WLsx5fmxk2iFszShOmKb5q3Hf6bOcamC14lxs/mugSrWm5ohtWh54HnyHKZwx74k1EDSRE9zaPFY6F0MQMv4L0E3S3ihoAtYmVq3MyyEMFS02TM8rm2prYGlbldcGM5nY9m1YoL7sCof4hUOssicwWCCamEnKf15030zxrm5eb417XFLMHVqdwhxV7Ht8JTMP4aDguyrz9SovQUrDFX8PHr16dfoNGDzmXe1SpuG6Sqt7qumgO7MRArYqi6jJ32l4vhi3udmcdNMPh9xH9F/P4tor8r4z/7Xo//ul2/M0Bd1/W+eXz6F4//rnAJ16J/vzfYjv+7vZv4/1r2/x4fnTx1YNJjjPA5aW28/7tPyHMvCGOOXc2DoDAmJVwxN5hNvSzSg+nAm1bGz81SwHdo/7UU4pr2//3OcMv+e/2uf2P/12L/hcrzFXXVMsvxeb70u/P7ZOKcSqHzHZxyod8fmW12Mp6BwzhvI8wu8FqN6shHgkPwqp3X64Q4L5NsV9wgc6E4jaKdaK8I5JmSSOdUMBpUN7EBzZFF7cWCcCcEx2T3fHZSKthP8h6WFNv5IqqjZIDuKMKiO1kumQe36MJ+4RZijQ8RdHJ2iO6kXOGIOJQzSInvjFBk9lkdzCFb1kKqnNJoZ2NOiYyp3cVVjZ61qdlDBRJOIBYQ1Y/v3ttJYaIlDUCYEnNlov9Nv1A7xisHz8m45w96Q5MCF2H/JJ09yfLJEWTDhAkclrQhL3GROWmgSq8PTv/Mvfvoh9Lx38s9fUj4GlDZjV//P/b/1bWJ6zr/1Rn0t/2/v3/j/6/H/0d4SUHdLtxKNzBGXqW8WKmonQ2yB1Ds4oYUM6GVORpWI1AWX4E/f0+Tlrk1DyyZsinElutmmVmIo8SeT8J8nRdCSphAALokDA3zIntKKMPVZKW9hJlNb/saKJW9rGJWOyv0bwXNrxVA9qkCSRNdK5ZKPWjiYi1iW0hjcMeeWs7Nr9H3Y//lCudX5HFV/NfrNM9/2tcb+7+GK18LN5vUZh2+FuOV54VGrQzOHlWbztbNdXh71Y7s2Oji1CDZpeJ8Jd4eZdu9ymyNe4NTxKJbK/i/5ad/Pst2C6Ny/qjA2D5NtAPvd+cVwcx5flpyqpyq2YFQnk3ZIOw437KT0wbVvNURV5UNfni7At2E6gLtKVBTTK6AtZshID67D3I5VYg2ATJXXbbyvFFVfvCr0FUu28Z5sPyyx8YKVjzcDVSHk9CcS+FuYriv5f9hpv4mPK6K/4bDYdP/+51+/8b/X8NV3cwJ6ZxqDCEcwTzbChNxnHLIMD0tBFPZRu6jfIPS7biZQ3ABd1LsW461TMlPJYil7y6UVqdZ+tkESBaJ+Y4jzFS1PN8Xtj6m9qNJoAZofYZxbMfWi41/7PbL3d4qEngTyueuWb7MWc8hx4fMJ2uw8XGvzDZbxi2vy/5Dwd6PrMk8sft5Qq6B0bNUSbjbE1LwtFDwNLYFjzoJ8/8RY8O7Xpwdjj/Bq19EuJ7Q92Q86BQQEGa6DPP5+P3i6G9fT///Bft64/sANAAA' | base64 --decode | tee ${nginx_path}/nginxconfig.io-example.com.tar.gz >/dev/null
-  tar -xzvf nginxconfig.io-example.com.tar.gz | xargs chmod 0644
-  sed -i "s|/usr/local/nginx/conf|${nginx_path}|g" nginx.conf
-  [[ ${is_compile} -eq 1 ]] && sed -i "/modules-enabled/a google_perftools_profiles /dev/shm/nginx/tcmalloc/tcmalloc;" nginx.conf
-  sed -i "/worker_connections/a \    use                epoll;" nginx.conf
-  sed -i "/ssl_protocols/i \    ssl_prefer_server_ciphers on;" nginx.conf
-  sed -i "/# Diffie-Hellman parameter for DHE ciphersuites/,/ssl_dhparam/d" nginx.conf
-  sed -i "/ssl_trusted_certificate/d" sites-available/example.com.conf
-  sed -i "s|max-age=31536000|max-age=63072000|" nginxconfig.io/security.conf
-}
-
 check_os
 
 while [[ $# -ge 1 ]]; do
@@ -506,7 +487,6 @@ done
 if [[ ${is_compile} -eq 1 ]]; then
   source_install
   systemctl_config
-  nginx_config
 elif [[ ${is_update} -eq 1 ]]; then
   if [[ -d /etc/nginx ]]; then
     pkg_update
@@ -518,5 +498,4 @@ elif [[ ${is_purge} -eq 1 ]]; then
 elif [[ ${is_install} -eq 1 ]]; then
   pkg_install
   systemctl_config
-  nginx_config
 fi
