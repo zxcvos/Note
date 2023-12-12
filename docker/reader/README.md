@@ -4,7 +4,7 @@
 
 ```shell
 mkdir -vp /usr/local/reader \
-&& curl -fsSL -o /usr/local/cloudreve/docker-compose.yaml https://raw.githubusercontent.com/zxcvos/Note/main/docker/reader/docker-compose.yaml
+&& curl -fsSL -o /usr/local/reader/docker-compose.yaml https://raw.githubusercontent.com/zxcvos/Note/main/docker/reader/docker-compose.yaml
 ```
 
 ### 创建目录结构
