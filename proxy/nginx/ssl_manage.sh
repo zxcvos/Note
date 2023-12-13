@@ -71,8 +71,8 @@ function purge_acme_sh() {
 
 # issue
 function issue_cert() {
-  [ -d "${webroot_path}" ] || mkdir -p "${webroot_path}"
-  [ -d "${ssl_path}" ] || mkdir -p "${ssl_path}"
+  [[ -d "${webroot_path}" ]] || mkdir -p "${webroot_path}"
+  [[ -d "${ssl_path}" ]] || mkdir -p "${ssl_path}"
 
   mv ${nginx_path}/nginx.conf ${nginx_path}/nginx.conf.bak
   cat >"${nginx_path}/nginx.conf" <<EOF
@@ -190,25 +190,25 @@ while [[ $# -ge 1 ]]; do
     ;;
   -d | --domain)
     shift
-    (printf "%s" "${1}" | grep -Eq "${op_regex}" || [ -z "$1" ]) && _error 'domain not provided'
+    (printf "%s" "${1}" | grep -Eq "${op_regex}" || [[ -z "$1" ]]) && _error 'domain not provided'
     domain+=("$1")
     shift
     ;;
   -n | --nginx)
     shift
-    (printf "%s" "${1}" | grep -Eq "${op_regex}" || [ -z "$1" ]) && _error 'nginx configuration path not provided'
+    (printf "%s" "${1}" | grep -Eq "${op_regex}" || [[ -z "$1" ]]) && _error 'nginx configuration path not provided'
     nginx_path="${1}"
     shift
     ;;
   -w | --webroot)
     shift
-    (printf "%s" "${1}" | grep -Eq "${op_regex}" || [ -z "$1" ]) && _error 'ACME-challenge directory path not provided'
+    (printf "%s" "${1}" | grep -Eq "${op_regex}" || [[ -z "$1" ]]) && _error 'ACME-challenge directory path not provided'
     webroot_path="$1"
     shift
     ;;
   -t | --tls)
     shift
-    (printf "%s" "${1}" | grep -Eq "${op_regex}" || [ -z "$1" ]) && _error 'ssl directory path not provided'
+    (printf "%s" "${1}" | grep -Eq "${op_regex}" || [[ -z "$1" ]]) && _error 'ssl directory path not provided'
     ssl_path="$1"
     shift
     ;;
