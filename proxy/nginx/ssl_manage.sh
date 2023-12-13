@@ -11,7 +11,7 @@ readonly YELLOW='\033[1;31;33m'
 readonly NC='\033[0m'
 
 # optional regex
-readonly op_regex='(^--(help|update|purge|issue|(stop-)?renew|check-cron|info|www|domain|nginx|webroot|ssl)$)|(^-[upirscdnws]$)'
+readonly op_regex='(^--(help|update|purge|issue|(stop-)?renew|check-cron|info|www|domain|nginx|webroot|tls)$)|(^-[upirscdnwt]$)'
 
 # optional
 declare is_update=0
@@ -240,7 +240,7 @@ if [[ -z "${webroot_path}" ]]; then
 fi
 
 if [[ -z "${ssl_path}" ]]; then
-  ssl_path="${nginx_path}/ssl/${domain[0]}"
+  ssl_path="${nginx_path}/certs/${domain[0]}"
 fi
 
 if [[ ${is_update} -eq 1 ]]; then
