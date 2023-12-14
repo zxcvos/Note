@@ -243,17 +243,6 @@ function compile_dependencies() {
   esac
 }
 
-function acme_dependencies() {
-  case "$(_os)" in
-  centos)
-    _install curl openssl crontabs
-    ;;
-  debian | ubuntu)
-    _install curl openssl cron
-    ;;
-  esac
-}
-
 # cflags
 function gen_cflags() {
   cflags=('-g0' '-O3')
