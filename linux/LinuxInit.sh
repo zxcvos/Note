@@ -1,6 +1,72 @@
 #!/usr/bin/env bash
+#
+# Copyright (C) 2023 zxcvos
+#
+# Ref: https://github.com/MoeClub/Note
+# Ref: https://github.com/leitbogioro/Tools
+# Ref: https://www.nodeseek.com/post-37225-1
 
-apt-get install -y iproute2 procps tzdata openssl dnsutils screen tmux nload wget curl lsof bsdmainutils cron
+function _exists() {
+  local cmd="$1"
+  if eval type type >/dev/null 2>&1; then
+    eval type "$cmd" >/dev/null 2>&1
+  elif command >/dev/null 2>&1; then
+    command -v "$cmd" >/dev/null 2>&1
+  else
+    which "$cmd" >/dev/null 2>&1
+  fi
+  local rt=$?
+  return ${rt}
+}
+
+function _os() {
+  local os=""
+  [[ -f "/etc/debian_version" ]] && source /etc/os-release && os="${ID}" && printf -- "%s" "${os}" && return
+  [[ -f "/etc/redhat-release" ]] && os="centos" && printf -- "%s" "${os}" && return
+}
+
+function _error_detect() {
+  local cmd="$1"
+  _info "${cmd}"
+  eval ${cmd}
+  if [[ $? -ne 0 ]]; then
+    _error "Execution command (${cmd}) failed, please check it and try again."
+  fi
+}
+
+function _install() {
+  local package_name="$@"
+  case "$(_os)" in
+  centos)
+    if _exists "yum"; then
+      yum update -y
+      _error_detect "yum install -y epel-release yum-utils"
+      yum update -y
+      _error_detect "yum install -y ${package_name}"
+    elif _exists "dnf"; then
+      dnf update -y
+      _error_detect "dnf install -y dnf-plugins-core"
+      dnf update -y
+      _error_detect "dnf install -y ${package_name}"
+    fi
+    ;;
+  ubuntu | debian)
+    apt update -y
+    _error_detect "apt install -y ${package_name}"
+    ;;
+  esac
+}
+
+function install_tools() {
+  case "$(_os)" in
+  centos)
+    _install curl openssl crontabs util-linux iproute net-tools bind-utils procps-ng tzdata wget curl lsof
+    ;;
+  debian | ubuntu)
+    _install curl openssl cron bsdmainutils iproute2 net-tools dnsutils procps tzdata wget curl lsof
+    ;;
+  esac
+}
 
 # limits
 if [ -f /etc/security/limits.conf ]; then
@@ -12,18 +78,87 @@ if [ -f /etc/systemd/system.conf ]; then
   sed -i 's/#\?DefaultLimitNOFILE=.*/DefaultLimitNOFILE=1048576/' /etc/systemd/system.conf
 fi
 
+# timezone
+ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo "Asia/Shanghai" >/etc/timezone
+
 # systemd-journald
 sed -i 's/^#\?Storage=.*/Storage=volatile/' /etc/systemd/journald.conf
 sed -i 's/^#\?SystemMaxUse=.*/SystemMaxUse=8M/' /etc/systemd/journald.conf
 sed -i 's/^#\?RuntimeMaxUse=.*/RuntimeMaxUse=8M/' /etc/systemd/journald.conf
 systemctl restart systemd-journald
 
-# nload
-echo -ne 'DataFormat="Human Readable (Byte)"\nTrafficFormat="Human Readable (Byte)"\n' >/etc/nload.conf
 
 # sysctl
-cat >/etc/sysctl.conf<<EOF
-# Ref: https://github.com/MoeClub/Note/blob/master/LinuxInit.sh
+cat >/etc/sysctl.d/99-sysctl.conf<<EOF
+#
+# /etc/sysctl.conf - Configuration file for setting system variables
+# See /etc/sysctl.d/ for additional system variables.
+# See sysctl.conf (5) for information.
+#
+
+#kernel.domainname = example.com
+
+# Uncomment the following to stop low-level messages on console
+#kernel.printk = 3 4 1 3
+
+###################################################################
+# Functions previously found in netbase
+#
+
+# Uncomment the next two lines to enable Spoof protection (reverse-path filter)
+# Turn on Source Address Verification in all interfaces to
+# prevent some spoofing attacks
+#net.ipv4.conf.default.rp_filter=1
+#net.ipv4.conf.all.rp_filter=1
+
+# Uncomment the next line to enable TCP/IP SYN cookies
+# See http://lwn.net/Articles/277146/
+# Note: This may impact IPv6 TCP sessions too
+#net.ipv4.tcp_syncookies=1
+
+# Uncomment the next line to enable packet forwarding for IPv4
+#net.ipv4.ip_forward=1
+
+# Uncomment the next line to enable packet forwarding for IPv6
+#  Enabling this option disables Stateless Address Autoconfiguration
+#  based on Router Advertisements for this host
+#net.ipv6.conf.all.forwarding=1
+
+
+###################################################################
+# Additional settings - these settings can improve the network
+# security of the host and prevent against some network attacks
+# including spoofing attacks and man in the middle attacks through
+# redirection. Some network environments, however, require that these
+# settings are disabled so review and enable them as needed.
+#
+# Do not accept ICMP redirects (prevent MITM attacks)
+#net.ipv4.conf.all.accept_redirects = 0
+#net.ipv6.conf.all.accept_redirects = 0
+# _or_
+# Accept ICMP redirects only for gateways listed in our default
+# gateway list (enabled by default)
+# net.ipv4.conf.all.secure_redirects = 1
+#
+# Do not send ICMP redirects (we are not a router)
+#net.ipv4.conf.all.send_redirects = 0
+#
+# Do not accept IP source route packets (we are not a router)
+#net.ipv4.conf.all.accept_source_route = 0
+#net.ipv6.conf.all.accept_source_route = 0
+#
+# Log Martian Packets
+#net.ipv4.conf.all.log_martians = 1
+#
+
+###################################################################
+# Magic system request Key
+# 0=disable, 1=enable all, >1 bitmask of sysrq functions
+# See https://www.kernel.org/doc/html/latest/admin-guide/sysrq.html
+# for what other values do
+#kernel.sysrq=438
+
+# Ref: https://github.com/MoeClub/Note
 # Ref: https://github.com/leitbogioro/Tools
 # Ref: https://www.nodeseek.com/post-37225-1
 
@@ -42,9 +177,9 @@ net.core.wmem_default = 524288
 net.core.rmem_default = 524288
 net.core.rmem_max = 536870912
 net.core.wmem_max = 536870912
-net.ipv4.tcp_mem = 2097152 8388608 33554432
+net.ipv4.tcp_mem = 2097152 8388608 536870912
 net.ipv4.tcp_rmem = 16384 524288 536870912
-net.ipv4.tcp_wmem = 4096 16384 536870912
+net.ipv4.tcp_wmem = 16384 524288 536870912
 net.ipv4.tcp_adv_win_scale = -2
 net.ipv4.tcp_collapse_max_bytes = 6291456
 net.ipv4.tcp_notsent_lowat = 131072
