@@ -57,16 +57,14 @@ function _install() {
   esac
 }
 
-function install_tools() {
-  case "$(_os)" in
-  centos)
-    _install curl openssl crontabs util-linux iproute net-tools bind-utils procps-ng tzdata wget curl lsof
-    ;;
-  debian | ubuntu)
-    _install curl openssl cron bsdmainutils iproute2 net-tools dnsutils procps tzdata wget curl lsof
-    ;;
-  esac
-}
+case "$(_os)" in
+centos)
+  _install curl openssl crontabs util-linux iproute net-tools bind-utils procps-ng tzdata wget curl lsof
+  ;;
+debian | ubuntu)
+  _install curl openssl cron bsdmainutils iproute2 net-tools dnsutils procps tzdata wget curl lsof
+  ;;
+esac
 
 # limits
 if [ -f /etc/security/limits.conf ]; then
