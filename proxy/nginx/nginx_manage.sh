@@ -230,7 +230,7 @@ function compile_dependencies() {
   case "$(_os)" in
   centos)
     # toolchains
-    _install ca-certificates wget gcc gcc-c++ make cmake git perl-IPC-Cmd perl-Getopt-Long perl-Data-Dumper perl-FindBin
+    _install ca-certificates wget gcc gcc-c++ make cmake git perl-IPC-Cmd perl-Getopt-Long perl-Data-Dumper perl-core
     # dependencies
     _install pcre2-devel zlib-devel libxml2-devel libxslt-devel gd-devel geoip-devel perl-ExtUtils-Embed gperftools-devel perl-devel
     ;;
@@ -319,16 +319,13 @@ function source_compile() {
   _info "Download the latest versions of OpenSSL"
   _error_detect "wget -O ${openssl_version}.tar.gz https://github.com/openssl/openssl/archive/${openssl_version#*-}.tar.gz"
   tar -zxf ${openssl_version}.tar.gz
+  _error_detect "git clone https://github.com/google/ngx_brotli && cd ngx_brotli && git submodule update --init"
   # _info "Checkout the latest ngx_brotli and build the dependencies"
-  # _error_detect "git clone https://github.com/google/ngx_brotli"
-  # cd ngx_brotli
-  # _error_detect "git submodule update --init"
-  _info "Checkout the latest ngx_brotli and build the dependencies"
-  _error_detect "git clone --recurse-submodules -j8 https://github.com/google/ngx_brotli"
-  cd ngx_brotli/deps/brotli
-  mkdir out && cd out
-  _error_detect 'cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_C_FLAGS="-Ofast -m64 -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -Wl,--gc-sections" -DCMAKE_CXX_FLAGS="-Ofast -m64 -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -Wl,--gc-sections" -DCMAKE_INSTALL_PREFIX=./installed ..'
-  _error_detect 'cmake --build . --config Release --target brotlienc'
+  # _error_detect "git clone --recurse-submodules -j8 https://github.com/google/ngx_brotli"
+  # cd ngx_brotli/deps/brotli
+  # mkdir out && cd out
+  # _error_detect 'cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_C_FLAGS="-Ofast -m64 -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -Wl,--gc-sections" -DCMAKE_CXX_FLAGS="-Ofast -m64 -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -Wl,--gc-sections" -DCMAKE_INSTALL_PREFIX=./installed ..'
+  # _error_detect 'cmake --build . --config Release --target brotlienc'
   cd ${TMPFILE_DIR}
   cd ${nginx_version}
   sed -i "s/OPTIMIZE[ \\t]*=>[ \\t]*'-O'/OPTIMIZE          => '-O3'/g" src/http/modules/perl/Makefile.PL
