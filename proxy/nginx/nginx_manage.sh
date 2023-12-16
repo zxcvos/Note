@@ -100,43 +100,55 @@ function _version_ge() {
 }
 
 function _install() {
-  local package_name="$@"
+  local packages_name="$@"
   case "$(_os)" in
   centos)
-    if _exists "yum"; then
-      yum update -y
-      _error_detect "yum install -y epel-release yum-utils"
-      yum update -y
-      _error_detect "yum install -y ${package_name}"
-    elif _exists "dnf"; then
+    if _exists "dnf"; then
       dnf update -y
-      _error_detect "dnf install -y dnf-plugins-core"
+      dnf install -y dnf-plugins-core
       dnf update -y
-      _error_detect "dnf install -y ${package_name}"
+      for package_name in ${packages_name}; do
+        dnf install -y ${package_name}
+      done
+    else
+      yum update -y
+      yum install -y epel-release yum-utils
+      yum update -y
+      for package_name in ${packages_name}; do
+        yum install -y ${package_name}
+      done
     fi
     ;;
   ubuntu | debian)
     apt update -y
-    _error_detect "apt install -y ${package_name}"
+    for package_name in ${packages_name}; do
+      apt install -y ${package_name}
+    done
     ;;
   esac
 }
 
 function _update() {
-  local package_name="$@"
+  local packages_name="$@"
   case "$(_os)" in
   centos)
-    if _exists "yum"; then
-      yum update -y
-      _error_detect "yum update -y ${package_name}"
-    elif _exists "dnf"; then
+    if _exists "dnf"; then
       dnf update -y
-      _error_detect "dnf update -y ${package_name}"
+      for package_name in ${packages_name}; do
+        dnf update -y ${package_name}
+      done
+    else
+      yum update -y
+      for package_name in ${packages_name}; do
+        yum update -y ${package_name}
+      done
     fi
     ;;
   ubuntu | debian)
     apt update -y
-    _error_detect "apt upgrade -y ${package_name}"
+    for package_name in ${packages_name}; do
+      apt upgrade -y ${package_name}
+    done
     ;;
   esac
 }
@@ -145,12 +157,12 @@ function _purge() {
   local package_name="$@"
   case "$(_os)" in
   centos)
-    if _exists "yum"; then
-      yum purge -y ${package_name}
-      yum autoremove -y
-    elif _exists "dnf"; then
+    if _exists "dnf"; then
       dnf purge -y ${package_name}
       dnf autoremove -y
+    else
+      yum purge -y ${package_name}
+      yum autoremove -y
     fi
     ;;
   ubuntu | debian)
@@ -165,7 +177,7 @@ function check_os() {
   [[ -z "$(_os)" ]] && _error "Not supported OS"
   case "$(_os)" in
   ubuntu)
-    [[ -n "$(_os_ver)" && "$(_os_ver)" -lt 18 ]] && _error "Not supported OS, please change to Ubuntu 18+ and try again."
+    [[ -n "$(_os_ver)" && "$(_os_ver)" -lt 20 ]] && _error "Not supported OS, please change to Ubuntu 20+ and try again."
     ;;
   debian)
     [[ -n "$(_os_ver)" && "$(_os_ver)" -lt 10 ]] && _error "Not supported OS, please change to Debian 10+ and try again."
@@ -177,6 +189,10 @@ function check_os() {
     _error "Not supported OS"
     ;;
   esac
+}
+
+function check_support_compile_os() {
+  [[ "$(_os)" == "centos" && "$(_os_ver)" -gt 8 ]] && _error "The script does not support Nginx compilation on the current operating system. Please switch to CentOS 7 or 8 and try again."
 }
 
 # swap
@@ -230,15 +246,15 @@ function compile_dependencies() {
   case "$(_os)" in
   centos)
     # toolchains
-    _install ca-certificates wget gcc gcc-c++ make cmake git perl-IPC-Cmd perl-Getopt-Long perl-Data-Dumper perl-core
+    _install ca-certificates wget gcc gcc-c++ make cmake git perl-IPC-Cmd perl-Getopt-Long perl-Data-Dumper perl-FindBin
     # dependencies
-    _install pcre2-devel zlib-devel libxml2-devel libxslt-devel gd-devel geoip-devel perl-ExtUtils-Embed gperftools-devel perl-devel
+    _install pcre2-devel zlib-devel libxml2-devel libxslt-devel gd-devel geoip-devel perl-ExtUtils-Embed gperftools-devel perl-devel brotli-devel
     ;;
   debian | ubuntu)
     # toolchains
     _install ca-certificates wget gcc g++ make cmake git perl-base perl
     # dependencies
-    _install libpcre2-dev zlib1g-dev libxml2-dev libxslt1-dev libgd-dev libgeoip-dev libgoogle-perftools-dev libperl-dev
+    _install libpcre2-dev zlib1g-dev libxml2-dev libxslt1-dev libgd-dev libgeoip-dev libgoogle-perftools-dev libperl-dev libbrotli-dev
     ;;
   esac
 }
@@ -319,13 +335,8 @@ function source_compile() {
   _info "Download the latest versions of OpenSSL"
   _error_detect "wget -O ${openssl_version}.tar.gz https://github.com/openssl/openssl/archive/${openssl_version#*-}.tar.gz"
   tar -zxf ${openssl_version}.tar.gz
+  _info "Checkout the latest ngx_brotli and build the dependencies"
   _error_detect "git clone https://github.com/google/ngx_brotli && cd ngx_brotli && git submodule update --init"
-  # _info "Checkout the latest ngx_brotli and build the dependencies"
-  # _error_detect "git clone --recurse-submodules -j8 https://github.com/google/ngx_brotli"
-  # cd ngx_brotli/deps/brotli
-  # mkdir out && cd out
-  # _error_detect 'cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_C_FLAGS="-Ofast -m64 -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -Wl,--gc-sections" -DCMAKE_CXX_FLAGS="-Ofast -m64 -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -Wl,--gc-sections" -DCMAKE_INSTALL_PREFIX=./installed ..'
-  # _error_detect 'cmake --build . --config Release --target brotlienc'
   cd ${TMPFILE_DIR}
   cd ${nginx_version}
   sed -i "s/OPTIMIZE[ \\t]*=>[ \\t]*'-O'/OPTIMIZE          => '-O3'/g" src/http/modules/perl/Makefile.PL
@@ -490,6 +501,7 @@ while [[ $# -ge 1 ]]; do
 done
 
 if [[ ${is_compile} -eq 1 ]]; then
+  check_support_compile_os
   source_install
   systemctl_config
   nginx_config
