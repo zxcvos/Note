@@ -26,16 +26,19 @@ chmod a+x docker_manage.sh
 ### 示例
 
 - 安装 Docker:
+
   ```bash
   docker_manage.sh -i
   ```
 
 - 更新 Docker:
+
   ```bash
   docker_manage.sh -u
   ```
 
 - 删除 Docker:
+
   ```bash
   docker_manage.sh -r
   ```
