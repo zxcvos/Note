@@ -90,7 +90,7 @@ http {
     server {
         listen       80;
         location ^~ /.well-known/acme-challenge/ {
-            root /var/www/_letsencrypt;
+            root ${webroot_path};
         }
     }
 }
