@@ -10,25 +10,33 @@ wget --no-check-certificate -qO InstallNET.sh 'https://raw.githubusercontent.com
 
 ### 重装系统
 
-#### Debian 官方推荐镜子列表
+#### Debian 官方推荐镜列表
 
 ```shell
 https://www.debian.org/mirror/list.html
 ```
-
-#### 默认信息
-
-账号: root
-
-密码: LeitboGi0ro
-
-SSH 端口: 当前系统 SSH 端口
 
 #### 使用美国镜像
 
 ```shell
 bash InstallNET.sh -debian 12 -mirror "https://mirrors.ocf.berkeley.edu/debian/" -port '22' -password 'LeitboGi0ro' -swap '1024' --cloudkernel '1' --bbr -firmware
 ```
+
+#### 配置信息
+
+发行版: debian 12
+
+账号: root
+
+密码: LeitboGi0ro
+
+SSH 端口: 22
+
+虚拟内存: 1024 MB
+
+内核: 云内核 (`-–cloudkernel '1'` 参数强制安装云内核，`-–cloudkernel '0'` 参数强制切换到安装传统 Linux 内核)
+
+bbr: 启用
 
 ## Linux Init
 
