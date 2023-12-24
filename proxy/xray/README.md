@@ -19,7 +19,7 @@ https://www.debian.org/mirror/list.html
 #### 使用美国镜像
 
 ```shell
-bash InstallNET.sh -debian 12 -mirror "https://mirrors.ocf.berkeley.edu/debian/" -port '22' -password 'LeitboGi0ro' -swap '1024' --cloudkernel '1' --bbr -firmware
+bash InstallNET.sh -debian 12 -mirror "https://mirrors.ocf.berkeley.edu/debian/" -port '22' -password 'LeitboGi0ro' -swap '1024' --cloudkernel '1' --bbr
 ```
 
 #### 配置信息
