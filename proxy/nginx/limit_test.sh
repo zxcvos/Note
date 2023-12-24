@@ -31,28 +31,6 @@ function _error() {
   exit 1
 }
 
-while [[ $# -ge 1 ]]; do
-  case "${1}" in
-  -d | --domain)
-    shift
-    [[ -z "$1" ]] && _error '域名未提供'
-    domain="$1"
-    shift
-    ;;
-  -h | --help)
-    echo "用法: $0 -d example.com"
-    echo "选项:"
-    echo "  -d, --domain        需要测试 limit.conf 配置的域名"
-    exit 0
-    ;;
-  *)
-    _error "无效的选项: '$1'。使用 '$0 -h/--help' 查看使用信息。"
-    ;;
-  esac
-done
-
-[[ -z "${domain}" ]] && _error '没有提供域名'
-
 # 使用不同的用户代理标头模拟测试
 test_curl() {
   local user_agent=$1
@@ -69,6 +47,33 @@ test_user_agents() {
   test_curl "${user_agent}" "https" && _info "https 正常访问" || _warn "https 禁止访问"
   echo
 }
+
+function show_help() {
+  echo "用法: $0 -d example.com"
+  echo "选项:"
+  echo "  -d, --domain        需要测试 limit.conf 配置的域名"
+  echo "  -h, --help          查看使用信息"
+  exit 0
+}
+
+while [[ $# -ge 1 ]]; do
+  case "${1}" in
+  -d | --domain)
+    shift
+    [[ -z "$1" ]] && _error '域名未提供'
+    domain="$1"
+    shift
+    ;;
+  -h | --help)
+    show_help
+    ;;
+  *)
+    _error "无效的选项: '$1'。使用 '$0 -h/--help' 查看使用信息。"
+    ;;
+  esac
+done
+
+[[ -z "${domain}" ]] && show_help
 
 # 运行测试
 test_user_agents "Curl"
