@@ -159,6 +159,10 @@ cat >/etc/sysctl.d/99-sysctl.conf<<EOF
 # Ref: https://github.com/MoeClub/Note
 # Ref: https://github.com/leitbogioro/Tools
 # Ref: https://www.nodeseek.com/post-37225-1
+# Ref: https://blog.cloudflare.com/optimizing-tcp-for-high-throughput-and-low-latency/
+
+# 注意：模块 "tcp_collapse_max_bytes "由 Cloudflare 完成，需要自行下载并应用补丁，否则该模块将无法生效。
+# 补丁: https://github.com/cloudflare/linux/blob/master/patches/0014-add-a-sysctl-to-enable-disable-tcp_collapse-logic.patch
 
 # ------ 网络调优: 基本 ------
 # TTL 配置, Linux 默认 64
