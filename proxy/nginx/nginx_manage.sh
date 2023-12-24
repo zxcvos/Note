@@ -106,6 +106,22 @@ function _install() {
     if _exists "dnf"; then
       dnf update -y
       dnf install -y dnf-plugins-core
+      if [[ -n "$(_os_ver)" && "$(_os_ver)" -eq 9 ]]; then
+        # Enable EPEL and Remi repositories
+        dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+        dnf install -y https://dl.fedoraproject.org/pub/epel/epel-next-release-latest-9.noarch.rpm
+        dnf install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
+        # Import GPG key for Remi repository
+        dnf install -y https://rpms.remirepo.net/RPM-GPG-KEY-remi
+        # Enable Remi modular repository
+        dnf config-manager --set-enabled remi-modular
+        # Refresh package information
+        dnf update --refresh
+        # Install GeoIP-devel, specifying the use of the Remi repository
+        dnf --enablerepo=remi install -y GeoIP-devel
+      elif [[ -n "$(_os_ver)" && "$(_os_ver)" -eq 8 ]]; then
+        dnf install -y epel-release epel-next-release
+      fi
       dnf update -y
       for package_name in ${packages_name}; do
         dnf install -y ${package_name}
@@ -189,10 +205,6 @@ function check_os() {
     _error "Not supported OS"
     ;;
   esac
-}
-
-function check_support_compile_os() {
-  [[ "$(_os)" == "centos" && "$(_os_ver)" -gt 8 ]] && _error "The script does not support Nginx compilation on the current operating system. Please switch to CentOS 7 or 8 and try again."
 }
 
 # swap
@@ -446,7 +458,7 @@ function nginx_config() {
   cd ${nginx_path}
   echo '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' | base64 --decode | tee ${nginx_path}/nginxconfig.io-example.com.tar.gz >/dev/null
   tar -xzvf nginxconfig.io-example.com.tar.gz | xargs chmod 0644
-  curl -fsSL -o ${nginx_path}/nginxconfig.io/limit.conf "https://raw.githubusercontent.com/zxcvos/Note/main/proxy/nginx/limit.conf"
+  curl -fsSL -o ${nginx_path}/nginxconfig.io/limit.conf "https://raw.githubusercontent.com/zxcvos/Note/main/proxy/nginx/conf/limit.conf"
   sed -i "s|/usr/local/nginx/conf|${nginx_path}|g" nginx.conf
   [[ ${is_compile} -eq 1 ]] && sed -i "/modules-enabled/a google_perftools_profiles /dev/shm/nginx/tcmalloc/tcmalloc;" nginx.conf
   sed -i "/worker_connections/a \    use                epoll;" nginx.conf
@@ -501,7 +513,6 @@ while [[ $# -ge 1 ]]; do
 done
 
 if [[ ${is_compile} -eq 1 ]]; then
-  check_support_compile_os
   source_install
   systemctl_config
   nginx_config
