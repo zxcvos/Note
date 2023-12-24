@@ -2,6 +2,12 @@
 
 ## Nginx
 
+### 支持的操作系统
+
+  - Ubuntu 20+
+  - Debian 10+
+  - CentOS 7+
+
 ### 安装 Nginx 管理脚本
 
 ```bash
@@ -55,18 +61,6 @@ curl -fsSL https://raw.githubusercontent.com/zxcvos/Note/main/proxy/nginx/nginx_
   ```bash
   (crontab -l 2>/dev/null | grep -v "${HOME}/nginx.sh -u >/dev/null 2>&1") | crontab -
   ```
-
-### 支持的操作系统
-
-- 包管理器安装支持的操作系统
-  - Ubuntu 20+
-  - Debian 10+
-  - CentOS 7+
-
-- 编译安装支持的操作系统
-  - Ubuntu 20+
-  - Debian 10+
-  - CentOS 7,8
 
 ### 注意事项
 
