@@ -24,10 +24,11 @@ readonly CUR_DIR="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
 readonly TMPFILE_DIR="$(mktemp -d -p "${CUR_DIR}" -t nginxtemp.XXXXXXXX)" || exit 1
 
 # optional
-declare is_install=1
+declare is_install=0
 declare is_compile=0
 declare is_update=0
 declare is_purge=0
+declare is_enable_brotli=0
 
 # exit process
 function egress() {
@@ -43,7 +44,7 @@ function _info() {
 }
 
 function _warn() {
-  printf "${YELLOW}[Warning] ${NC}"
+  printf "${YELLOW}[Warn] ${NC}"
   printf -- "%s" "$@"
   printf "\n"
 }
@@ -340,22 +341,34 @@ function source_compile() {
   _info "Retrieve the latest versions of Nginx and OpenSSL"
   local nginx_version="$(wget -qO- --no-check-certificate https://api.github.com/repos/nginx/nginx/tags | grep 'name' | cut -d\" -f4 | grep 'release' | head -1 | sed 's/release/nginx/')"
   local openssl_version="openssl-$(wget -qO- --no-check-certificate https://api.github.com/repos/openssl/openssl/tags | grep 'name' | cut -d\" -f4 | grep -Eoi '^openssl-([0-9]\.?){3}$' | head -1)"
+  # gcc
   gen_cflags
+  # nginx
   _info "Download the latest versions of Nginx"
-  _error_detect "wget -O ${nginx_version}.tar.gz https://nginx.org/download/${nginx_version}.tar.gz"
+  _error_detect "curl -fsSL -o ${nginx_version}.tar.gz https://nginx.org/download/${nginx_version}.tar.gz"
   tar -zxf ${nginx_version}.tar.gz
+  # openssl
   _info "Download the latest versions of OpenSSL"
-  _error_detect "wget -O ${openssl_version}.tar.gz https://github.com/openssl/openssl/archive/${openssl_version#*-}.tar.gz"
+  _error_detect "curl -fsSL -o ${openssl_version}.tar.gz https://github.com/openssl/openssl/archive/${openssl_version#*-}.tar.gz"
   tar -zxf ${openssl_version}.tar.gz
-  _info "Checkout the latest ngx_brotli and build the dependencies"
-  _error_detect "git clone https://github.com/google/ngx_brotli && cd ngx_brotli && git submodule update --init"
-  cd ${TMPFILE_DIR}
+  if [[ ${is_enable_brotli} -eq 1 ]]; then
+    # brotli
+    _info "Checkout the latest ngx_brotli and build the dependencies"
+    _error_detect "git clone https://github.com/google/ngx_brotli && cd ngx_brotli && git submodule update --init"
+    cd ${TMPFILE_DIR}
+  fi
+  # configure
   cd ${nginx_version}
   sed -i "s/OPTIMIZE[ \\t]*=>[ \\t]*'-O'/OPTIMIZE          => '-O3'/g" src/http/modules/perl/Makefile.PL
   sed -i 's/NGX_PERL_CFLAGS="$CFLAGS `$NGX_PERL -MExtUtils::Embed -e ccopts`"/NGX_PERL_CFLAGS="`$NGX_PERL -MExtUtils::Embed -e ccopts` $CFLAGS"/g' auto/lib/perl/conf
   sed -i 's/NGX_PM_CFLAGS=`$NGX_PERL -MExtUtils::Embed -e ccopts`/NGX_PM_CFLAGS="`$NGX_PERL -MExtUtils::Embed -e ccopts` $CFLAGS"/g' auto/lib/perl/conf
-  ./configure --prefix="/usr/local/nginx" --user=root --group=root --with-threads --with-file-aio --with-http_ssl_module --with-http_v2_module --with-http_realip_module --with-http_addition_module --with-http_xslt_module=dynamic --with-http_image_filter_module=dynamic --with-http_geoip_module=dynamic --with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_mp4_module --with-http_gunzip_module --with-http_gzip_static_module --with-http_auth_request_module --with-http_random_index_module --with-http_secure_link_module --with-http_degradation_module --with-http_slice_module --with-http_stub_status_module --with-http_perl_module=dynamic --with-mail=dynamic --with-mail_ssl_module --with-stream --with-stream_ssl_module --with-stream_realip_module --with-stream_geoip_module=dynamic --with-stream_ssl_preread_module --with-google_perftools_module --add-module="../ngx_brotli" --with-compat --with-cc-opt="${cflags[*]}" --with-openssl="../${openssl_version}" --with-openssl-opt="${cflags[*]}"
+  if [[ ${is_enable_brotli} -eq 1 ]]; then
+    ./configure --prefix="${NGINX_PATH}" --user=root --group=root --with-threads --with-file-aio --with-http_ssl_module --with-http_v2_module --with-http_realip_module --with-http_addition_module --with-http_xslt_module=dynamic --with-http_image_filter_module=dynamic --with-http_geoip_module=dynamic --with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_mp4_module --with-http_gunzip_module --with-http_gzip_static_module --with-http_auth_request_module --with-http_random_index_module --with-http_secure_link_module --with-http_degradation_module --with-http_slice_module --with-http_stub_status_module --with-http_perl_module=dynamic --with-mail=dynamic --with-mail_ssl_module --with-stream --with-stream_ssl_module --with-stream_realip_module --with-stream_geoip_module=dynamic --with-stream_ssl_preread_module --with-google_perftools_module --add-module="../ngx_brotli" --with-compat --with-cc-opt="${cflags[*]}" --with-openssl="../${openssl_version}" --with-openssl-opt="${cflags[*]}"
+  else
+    ./configure --prefix="${NGINX_PATH}" --user=root --group=root --with-threads --with-file-aio --with-http_ssl_module --with-http_v2_module --with-http_realip_module --with-http_addition_module --with-http_xslt_module=dynamic --with-http_image_filter_module=dynamic --with-http_geoip_module=dynamic --with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_mp4_module --with-http_gunzip_module --with-http_gzip_static_module --with-http_auth_request_module --with-http_random_index_module --with-http_secure_link_module --with-http_degradation_module --with-http_slice_module --with-http_stub_status_module --with-http_perl_module=dynamic --with-mail=dynamic --with-mail_ssl_module --with-stream --with-stream_ssl_module --with-stream_realip_module --with-stream_geoip_module=dynamic --with-stream_ssl_preread_module --with-google_perftools_module --with-compat --with-cc-opt="${cflags[*]}" --with-openssl="../${openssl_version}" --with-openssl-opt="${cflags[*]}"
+  fi
   swap_on 512
+  # compile
   _info "Compiling Nginx"
   _error_detect "make -j$(nproc)"
 }
@@ -458,7 +471,7 @@ function nginx_config() {
   cd ${nginx_path}
   echo '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' | base64 --decode | tee ${nginx_path}/nginxconfig.io-example.com.tar.gz >/dev/null
   tar -xzvf nginxconfig.io-example.com.tar.gz | xargs chmod 0644
-  curl -fsSL -o ${nginx_path}/nginxconfig.io/limit.conf "https://raw.githubusercontent.com/zxcvos/Note/main/proxy/nginx/conf/limit.conf"
+  _error_detect "curl -fsSL -o ${nginx_path}/nginxconfig.io/limit.conf "https://raw.githubusercontent.com/zxcvos/Note/main/proxy/nginx/conf/limit.conf""
   sed -i "s|/usr/local/nginx/conf|${nginx_path}|g" nginx.conf
   [[ ${is_compile} -eq 1 ]] && sed -i "/modules-enabled/a google_perftools_profiles /dev/shm/nginx/tcmalloc/tcmalloc;" nginx.conf
   sed -i "/worker_connections/a \    use                epoll;" nginx.conf
@@ -466,14 +479,37 @@ function nginx_config() {
   sed -i "/# Mozilla Intermediate configuration/i # Bottom Diffie-Hellman" nginx.conf
   sed -i "/# Diffie-Hellman parameter for DHE ciphersuites/,/# Bottom Diffie-Hellman/d" nginx.conf
   sed -i "s|max-age=31536000|max-age=63072000|" nginxconfig.io/security.conf
-  if [[ ${is_compile} -ne 1 ]]; then
-    sed -i "/gzip_types/a # brotli off" nginxconfig.io/general.conf
-    sed -i "/# brotli off/,/brotli_types/d" nginxconfig.io/general.conf
+  if [[ ${is_compile} -ne 1 || ${is_enable_brotli} -ne 1 ]]; then
+    # disable brotli
+    sed -i "/brotli/,/brotli_types/s/^/# /" nginxconfig.io/general.conf
   fi
   rm -rf sites-enabled/example.com.conf
 }
 
+function show_help() {
+  cat <<EOF
+Usage: $0 [options]
+
+Options:
+  -i, --install      Install Nginx
+  -c, --compile      Compile and install Nginx from source
+  -u, --update       Update Nginx (detects if installed from package or source)
+  -b, --brotli       Enable brotli compression
+  -p, --purge        Uninstall and purge Nginx
+  -h, --help         Show this help message
+
+Note:
+  - The '-u' option is designed for updating Nginx installed through this script.
+    If Nginx was not installed by this script, using '-u' may lead to unexpected behavior.
+EOF
+  exit 0
+}
+
 check_os
+
+if [[ $# -eq 0 ]]; then
+  show_help
+fi
 
 while [[ $# -ge 1 ]]; do
   case "${1}" in
@@ -489,22 +525,16 @@ while [[ $# -ge 1 ]]; do
     shift
     is_update=1
     ;;
+  -b | --brotli)
+    shift
+    is_enable_brotli=1
+    ;;
   -p | --purge)
     shift
     is_purge=1
     ;;
   -h | --help)
-    echo "Usage: $0 [options]"
-    echo "Options:"
-    echo "  -i, --install      Install Nginx (default if no option provided)"
-    echo "  -c, --compile      Compile and install Nginx from source"
-    echo "  -u, --update       Update Nginx (detects if installed from package or source)"
-    echo "  -p, --purge        Uninstall and purge Nginx"
-    echo ""
-    echo "Note:"
-    echo "  - The '-u' option is designed for updating Nginx installed through this script."
-    echo "    If Nginx was not installed by this script, using '-u' may lead to unexpected behavior."
-    exit 0
+    show_help
     ;;
   *)
     _error "Invalid option: '$1'. Use '$0 -h/--help' for usage information."
