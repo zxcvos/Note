@@ -91,7 +91,15 @@ function check_os() {
 function install_docker() {
   case "$(_os)" in
   centos)
-    if _exists "yum"; then
+    if _exists "dnf"; then
+      sudo dnf update -y
+      sudo dnf install -y dnf-plugins-core
+      sudo dnf update -y
+      sudo dnf config-manager \
+        --add-repo \
+        https://download.docker.com/linux/centos/docker-ce.repo
+      sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin --allowerasing
+    else
       sudo yum update -y
       sudo yum install -y epel-release yum-utils
       sudo yum update -y
@@ -99,14 +107,6 @@ function install_docker() {
         --add-repo \
         https://download.docker.com/linux/centos/docker-ce.repo
       sudo yum install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-    elif _exists "dnf"; then
-      sudo dnf update -y
-      sudo dnf install -y dnf-plugins-core
-      sudo dnf update -y
-      sudo dnf config-manager \
-        --add-repo \
-        https://download.docker.com/linux/centos/docker-ce.repo
-      sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
     fi
     ;;
   debian | ubuntu)
