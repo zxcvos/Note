@@ -16,9 +16,10 @@ curl -fsSL https://raw.githubusercontent.com/zxcvos/Note/main/proxy/nginx/nginx_
 
 ### Nginx 管理脚本选项
 
-- `-i, --install`: 包管理器安装 Nginx（默认选项）。
+- `-i, --install`: 包管理器安装 Nginx。
 - `-c, --compile`: 编译安装 Nginx。
 - `-u, --update`: 更新 Nginx。
+- `-b, --brotli`: 编译安装/更新添加 Brotli 模块（配合 `-u` 更新非编译安装的 Nginx 时，该选项无效）。
 - `-p, --purge`: 删除 Nginx。
 - `-h, --help`: 显示使用信息。
 
@@ -33,13 +34,13 @@ curl -fsSL https://raw.githubusercontent.com/zxcvos/Note/main/proxy/nginx/nginx_
 - 编译安装 Nginx:
 
   ```bash
-  ${HOME}/nginx.sh -c
+  ${HOME}/nginx.sh -c -b
   ```
 
 - 更新 Nginx:
 
   ```bash
-  ${HOME}/nginx.sh -u
+  ${HOME}/nginx.sh -u -b
   ```
 
 - 删除 Nginx:
@@ -53,13 +54,13 @@ curl -fsSL https://raw.githubusercontent.com/zxcvos/Note/main/proxy/nginx/nginx_
 - 添加 nginx 定时更新任务
 
   ```bash
-  (crontab -l 2>/dev/null; echo "0 3 * * * ${HOME}/nginx.sh -u >/dev/null 2>&1") | awk '!x[$0]++' | crontab -
+  (crontab -l 2>/dev/null; echo "0 3 * * * ${HOME}/nginx.sh -u -b >/dev/null 2>&1") | awk '!x[$0]++' | crontab -
   ```
 
 - 删除 nginx 定时更新任务
 
   ```bash
-  (crontab -l 2>/dev/null | grep -v "${HOME}/nginx.sh -u >/dev/null 2>&1") | crontab -
+  (crontab -l 2>/dev/null | grep -v "${HOME}/nginx.sh -u -b >/dev/null 2>&1") | crontab -
   ```
 
 ### 注意事项
