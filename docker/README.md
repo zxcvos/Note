@@ -28,19 +28,19 @@ chmod a+x docker_manage.sh
 - 安装 Docker:
 
   ```bash
-  docker_manage.sh -i
+  ./docker_manage.sh -i
   ```
 
 - 更新 Docker:
 
   ```bash
-  docker_manage.sh -u
+  ./docker_manage.sh -u
   ```
 
 - 删除 Docker:
 
   ```bash
-  docker_manage.sh -r
+  ./docker_manage.sh -r
   ```
 
 ### 支持的操作系统
