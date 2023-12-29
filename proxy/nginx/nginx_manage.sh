@@ -102,44 +102,63 @@ function _version_ge() {
 
 function _install() {
   local packages_name="$@"
+  local installed_packages=""
   case "$(_os)" in
   centos)
     if _exists "dnf"; then
-      dnf update -y
-      dnf install -y dnf-plugins-core
+      packages_name="dnf-plugins-core epel-release epel-next-release ${packages_name}"
+      installed_packages=$(dnf list installed 2>/dev/null)
       if [[ -n "$(_os_ver)" && "$(_os_ver)" -eq 9 ]]; then
         # Enable EPEL and Remi repositories
-        dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
-        dnf install -y https://dl.fedoraproject.org/pub/epel/epel-next-release-latest-9.noarch.rpm
-        dnf install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
-        # Import GPG key for Remi repository
-        dnf install -y https://rpms.remirepo.net/RPM-GPG-KEY-remi
-        # Enable Remi modular repository
-        dnf config-manager --set-enabled remi-modular
-        # Refresh package information
-        dnf update --refresh
-        # Install GeoIP-devel, specifying the use of the Remi repository
-        dnf --enablerepo=remi install -y GeoIP-devel
+        if ! echo "${installed_packages}" | grep -iq "epel-release"; then
+          dnf update -y
+          dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+        fi
+        if ! echo "${installed_packages}" | grep -iq "epel-next-release"; then
+          dnf update -y
+          dnf install -y https://dl.fedoraproject.org/pub/epel/epel-next-release-latest-9.noarch.rpm
+        fi
+        if [[ "${packages_name}" =~ "geoip-devel" ]] && ! echo "${installed_packages}" | grep -iq "geoip-devel"; then
+          dnf install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
+          # Import GPG key for Remi repository
+          dnf install -y https://rpms.remirepo.net/RPM-GPG-KEY-remi
+          # Enable Remi modular repository
+          dnf config-manager --set-enabled remi-modular
+          # Refresh package information
+          dnf update --refresh
+          # Install GeoIP-devel, specifying the use of the Remi repository
+          dnf --enablerepo=remi install -y GeoIP-devel
+        fi
       elif [[ -n "$(_os_ver)" && "$(_os_ver)" -eq 8 ]]; then
-        dnf install -y epel-release epel-next-release
+        if ! echo "${installed_packages}" | grep -Eiq "epel-release|epel-next-release"; then
+          dnf update -y
+        fi
       fi
-      dnf update -y
       for package_name in ${packages_name}; do
-        dnf install -y ${package_name}
+        if ! echo "${installed_packages}" | grep -iq "${package_name}"; then
+          dnf install -y ${package_name}
+        fi
       done
     else
-      yum update -y
-      yum install -y epel-release yum-utils
-      yum update -y
+      packages_name="epel-release yum-utils ${packages_name}"
+      installed_packages=$(yum list installed 2>/dev/null)
+      if ! echo "${installed_packages}" | grep -Eiq "epel-release|yum-utils"; then
+        yum update -y
+      fi
       for package_name in ${packages_name}; do
-        yum install -y ${package_name}
+        if ! echo "${installed_packages}" | grep -iq "${package_name}"; then
+          yum install -y ${package_name}
+        fi
       done
     fi
     ;;
   ubuntu | debian)
     apt update -y
+    installed_packages=$(apt list --installed 2>/dev/null)
     for package_name in ${packages_name}; do
-      apt install -y ${package_name}
+      if ! echo "${installed_packages}" | grep -iq "${package_name}"; then
+        apt install -y ${package_name}
+      fi
     done
     ;;
   esac
