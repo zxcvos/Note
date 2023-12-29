@@ -275,16 +275,21 @@ function install_dependencies() {
 }
 
 function compile_dependencies() {
+  # general
+  _install ca-certificates curl wget gcc make git openssl tzdata
   case "$(_os)" in
   centos)
     # toolchains
-    _install ca-certificates wget gcc gcc-c++ make cmake git perl-IPC-Cmd perl-Getopt-Long perl-Data-Dumper perl-FindBin
+    _install gcc-c++ perl-IPC-Cmd perl-Getopt-Long perl-Data-Dumper
     # dependencies
     _install pcre2-devel zlib-devel libxml2-devel libxslt-devel gd-devel geoip-devel perl-ExtUtils-Embed gperftools-devel perl-devel brotli-devel
+    if ! perl -e "use FindBin" &>/dev/null; then
+      _install perl-FindBin
+    fi
     ;;
   debian | ubuntu)
     # toolchains
-    _install ca-certificates wget gcc g++ make cmake git perl-base perl
+    _install g++ perl-base perl
     # dependencies
     _install libpcre2-dev zlib1g-dev libxml2-dev libxslt1-dev libgd-dev libgeoip-dev libgoogle-perftools-dev libperl-dev libbrotli-dev
     ;;
