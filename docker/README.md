@@ -3,8 +3,18 @@
 ## 官方 Docker 安装脚本
 
 ```bash
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
+curl -fsSL -o install-docker.sh https://get.docker.com
+sh install-docker.sh --dry-run
+sh install-docker.sh
+```
+
+centos 8
+
+```bash
+curl -fsSL -o install-docker.sh https://get.docker.com
+sed -i 's|$sh_c "$pkg_manager install -y -q $pkgs"| $sh_c "$pkg_manager install -y -q $pkgs --allowerasing"|' install-docker.sh
+sh install-docker.sh --dry-run
+sh install-docker.sh
 ```
 
 ## 自定义 Docker 安装脚本
