@@ -107,57 +107,50 @@ function _install() {
   centos)
     if _exists "dnf"; then
       packages_name="dnf-plugins-core epel-release epel-next-release ${packages_name}"
-      installed_packages=$(dnf list installed 2>/dev/null)
+      installed_packages="$(dnf list installed 2>/dev/null)"
       if [[ -n "$(_os_ver)" && "$(_os_ver)" -eq 9 ]]; then
         # Enable EPEL and Remi repositories
-        if ! echo "${installed_packages}" | grep -iq "epel-release"; then
+        if [[ "${packages_name}" =~ "geoip-devel" ]] && ! echo "${installed_packages}" | grep -iwq "geoip-devel"; then
           dnf update -y
-          dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
-        fi
-        if ! echo "${installed_packages}" | grep -iq "epel-next-release"; then
-          dnf update -y
-          dnf install -y https://dl.fedoraproject.org/pub/epel/epel-next-release-latest-9.noarch.rpm
-        fi
-        if [[ "${packages_name}" =~ "geoip-devel" ]] && ! echo "${installed_packages}" | grep -iq "geoip-devel"; then
-          dnf install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
-          # Import GPG key for Remi repository
-          dnf install -y https://rpms.remirepo.net/RPM-GPG-KEY-remi
+          _error_detect "dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm"
+          _error_detect "dnf install -y https://dl.fedoraproject.org/pub/epel/epel-next-release-latest-9.noarch.rpm"
+          _error_detect "dnf install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm"
           # Enable Remi modular repository
-          dnf config-manager --set-enabled remi-modular
+          _error_detect "dnf config-manager --set-enabled remi-modular"
           # Refresh package information
-          dnf update --refresh
+          _error_detect "dnf update --refresh"
           # Install GeoIP-devel, specifying the use of the Remi repository
-          dnf --enablerepo=remi install -y GeoIP-devel
+          dnf update -y
+          _error_detect "dnf --enablerepo=remi install -y GeoIP-devel"
         fi
       elif [[ -n "$(_os_ver)" && "$(_os_ver)" -eq 8 ]]; then
-        if ! echo "${installed_packages}" | grep -Eiq "epel-release|epel-next-release"; then
-          dnf update -y
+        if ! dnf module list 2>/dev/null | grep container-tools | grep -iwq "\[x\]"; then
+          _error_detect "dnf module disable -y container-tools"
         fi
       fi
+      dnf update -y
       for package_name in ${packages_name}; do
-        if ! echo "${installed_packages}" | grep -iq "${package_name}"; then
-          dnf install -y ${package_name}
+        if ! echo "${installed_packages}" | grep -iwq "${package_name}"; then
+          _error_detect "dnf install -y "${package_name}""
         fi
       done
     else
       packages_name="epel-release yum-utils ${packages_name}"
-      installed_packages=$(yum list installed 2>/dev/null)
-      if ! echo "${installed_packages}" | grep -Eiq "epel-release|yum-utils"; then
-        yum update -y
-      fi
+      installed_packages="$(yum list installed 2>/dev/null)"
+      yum update -y
       for package_name in ${packages_name}; do
-        if ! echo "${installed_packages}" | grep -iq "${package_name}"; then
-          yum install -y ${package_name}
+        if ! echo "${installed_packages}" | grep -iwq "${package_name}"; then
+          _error_detect "yum install -y "${package_name}""
         fi
       done
     fi
     ;;
   ubuntu | debian)
     apt update -y
-    installed_packages=$(apt list --installed 2>/dev/null)
+    installed_packages="$(apt list --installed 2>/dev/null)"
     for package_name in ${packages_name}; do
-      if ! echo "${installed_packages}" | grep -iq "${package_name}"; then
-        apt install -y ${package_name}
+      if ! echo "${installed_packages}" | grep -iwq "${package_name}"; then
+        _error_detect "apt install -y "${package_name}""
       fi
     done
     ;;
